@@ -274,22 +274,26 @@
   /* ======================================================================
      OPTIONEN (lesen / schreiben)
      ====================================================================== */
-  function renderOptions(c) {
+  async function renderOptions(c) {
+    c.innerHTML = loader();
+    var res = await api("/firma/optionslots");
+    if (!res.ok) { c.innerHTML = errState(res.data && res.data.detail); return; }
+    var d = res.data;
+    var pct = d.total ? Math.round((d.used / d.total) * 100) : 0;
+    var rows = d.slots.map(function (s) {
+      return "<tr><td class='cell-strong'>Slot " + s.slot + "</td><td>" +
+        (s.used ? '<span class="pill">belegt</span>' : '<span class="pill muted">frei</span>') + "</td><td>" +
+        escapeHtml(s.title || "–") + "</td><td>" + (s.length || 0) + " / 2400</td></tr>";
+    }).join("");
     c.innerHTML =
-      '<div class="panel glass" style="max-width:620px"><div class="panel-head"><h3>Page-Option-Slot lesen</h3></div>' +
-        '<p style="color:var(--text-soft);font-size:.9rem;margin-bottom:14px">Inspiziere die rohen StateV Page-Option-Slots deiner Firma (1–10). Diese werden vom „Veröffentlichen" befüllt und vom Guide gelesen.</p>' +
-        '<div class="field"><label>Slot (1–10)</label><input id="optKey" type="number" min="1" max="10" value="1" data-testid="opt-key" /></div>' +
-        '<div class="form-actions"><button class="btn-sm ghost" id="optRead" data-testid="opt-read">Slot lesen</button></div>' +
-        '<div id="optReadOut" style="margin-top:14px"></div>' +
+      '<div class="kpi-grid"><div class="kpi glass"><div class="k-ic">' + icon("cog", 'width="20" height="20"') + '</div><b data-testid="slots-usage">' + d.used + " / " + d.total + "</b><span>Slots genutzt</span></div></div>" +
+      '<div class="panel glass"><div class="panel-head"><h3>Auslastung der Page-Option-Slots</h3><button class="btn-sm ghost" id="optRefresh" data-testid="opt-refresh">Aktualisieren</button></div>' +
+      '<div class="usage-bar"><span style="width:' + pct + '%"></span></div>' +
+      '<div class="usage-label">' + d.used + " von " + d.total + " Slots belegt (" + pct + "%)</div>" +
+      '<div class="tbl-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th>Slot</th><th>Status</th><th>Titel</th><th>Größe</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+      '<p style="margin-top:14px;color:var(--text-dim);font-size:.82rem">Slot 1 enthält das Manifest, Slots 2+ die Inhalts-Blöcke (vom „Veröffentlichen" befüllt). Ohne Premium stehen 10 Slots zur Verfügung.</p>' +
       "</div>";
-    document.getElementById("optRead").addEventListener("click", async function () {
-      var key = document.getElementById("optKey").value.trim();
-      var out = document.getElementById("optReadOut");
-      if (!key) return toast("Bitte einen Slot (1–10) angeben.", "err");
-      out.innerHTML = loader();
-      var res = await api("/firma/options/" + encodeURIComponent(key));
-      out.innerHTML = res.ok ? renderAny(res.data) : errState(res.data && res.data.detail);
-    });
+    document.getElementById("optRefresh").addEventListener("click", function () { renderOptions(c); });
   }
 
   /* ======================================================================
@@ -334,6 +338,7 @@
       { k: "title", l: "Titel" }, { k: "cat", l: "Kategorie (z. B. Sport)" },
       { k: "day", l: "Tag (z. B. 14)" }, { k: "mon", l: "Monat (z. B. Jun)" },
       { k: "time", l: "Uhrzeit (z. B. 22:00 Uhr)" }, { k: "place", l: "Ort" },
+      { k: "bg", l: "Hintergrundbild-URL (pic.statev.de, optional)" },
       { k: "text", l: "Beschreibung", area: true }
     ],
     news: [
@@ -346,7 +351,7 @@
     ],
     gallery: [
       { k: "cap", l: "Bildunterschrift" },
-      { k: "img", l: "Bild-Dateiname ohne Endung (z. B. hero) – leer lassen für Farbverlauf" },
+      { k: "img", l: "Bild-URL (pic.statev.de) ODER lokaler Dateiname ohne Endung – leer lassen für Farbverlauf" },
       { k: "grad", l: "Farbverlauf (CSS, optional, z. B. linear-gradient(135deg,#f5b942,#ef6f5e))" },
       { k: "ar", l: "Seitenverhältnis (z. B. 1 oder 1.5)" }
     ]
@@ -379,7 +384,8 @@
       var sub = cmsKind === "gallery" ? (it.img ? "Bild: " + it.img : "Farbverlauf") : (it.meta || it.cat || it.text || "");
       var thumb = "";
       if (cmsKind === "gallery") {
-        var bg = it.img ? "url('images/" + it.img + ".png')" : (it.grad || "var(--surface)");
+        var src = it.img ? (/^https?:\/\//.test(it.img) ? it.img : "images/" + it.img + ".png") : null;
+        var bg = src ? "url('" + src + "')" : (it.grad || "var(--surface)");
         thumb = '<div class="cms-grid-thumb" style="background:' + bg + ';background-size:cover"></div>';
       }
       return '<div class="cms-item">' + thumb + '<div class="ci-main" style="flex:1"><b>' + escapeHtml(title) + "</b><span>" + escapeHtml(String(sub).slice(0, 80)) + "</span></div>" +

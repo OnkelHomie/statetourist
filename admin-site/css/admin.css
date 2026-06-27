@@ -79,6 +79,10 @@ table.tbl tr:hover td { background: var(--surface); color: var(--text); }
 .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.usage-bar { height: 12px; border-radius: 999px; background: var(--bg-elev); border: 1px solid var(--border); overflow: hidden; }
+.usage-bar span { display: block; height: 100%; background: var(--accent-grad); border-radius: 999px; transition: width .6s var(--ease); }
+.usage-label { margin-top: 10px; font-size: 0.86rem; color: var(--text-soft); }
+
 /* ---------- Forms / CMS ---------- */
 .cms-tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
 .field { margin-bottom: 14px; }

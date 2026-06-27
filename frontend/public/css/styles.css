@@ -529,6 +529,28 @@ a.tile:hover .tile-go svg { transform: translateX(5px); }
 .firma-status .fs-meta span { display: inline-flex; align-items: center; gap: 7px; }
 .firma-status .fs-meta svg { color: var(--teal); }
 
+/* Klickbare Freizeit-Kacheln */
+button.tile { width: 100%; font-family: inherit; text-align: left; cursor: pointer; }
+
+/* Event-Hintergrundbild */
+.event-card.has-bg { position: relative; }
+.event-card .ec-bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; opacity: .92; transition: transform .8s var(--ease); }
+.event-card.has-bg:hover .ec-bg { transform: scale(1.07); }
+.event-card.has-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(7,9,13,.35) 0%, rgba(7,9,13,.78) 55%, rgba(7,9,13,.96) 100%); }
+.event-card.has-bg .ec-top, .event-card.has-bg .ec-body { position: relative; z-index: 2; }
+
+/* Freizeit-Popup */
+.fz-modal-backdrop { position: fixed; inset: 0; z-index: 200; background: rgba(4,6,9,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; padding: 24px; opacity: 0; transition: opacity .3s var(--ease); }
+.fz-modal-backdrop.show { opacity: 1; }
+.fz-modal { position: relative; max-width: 520px; width: 100%; border-radius: var(--radius-lg); padding: 38px 34px 34px; transform: translateY(18px) scale(.97); transition: transform .35s var(--ease); box-shadow: var(--shadow-soft); }
+.fz-modal-backdrop.show .fz-modal { transform: none; }
+.fz-modal .fz-ic { width: 60px; height: 60px; border-radius: 17px; display: grid; place-items: center; background: var(--accent-grad); margin-bottom: 20px; box-shadow: 0 12px 30px -12px rgba(245,160,66,.8); }
+.fz-modal .fz-ic svg { width: 30px; height: 30px; color: #1a1206; }
+.fz-modal h3 { font-size: 1.6rem; letter-spacing: -.01em; margin-bottom: 12px; }
+.fz-modal p { color: var(--text-soft); font-size: .98rem; line-height: 1.7; }
+.fz-close { position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; border-radius: 11px; font-size: 1.5rem; line-height: 1; color: var(--text-soft); background: var(--surface); border: 1px solid var(--border); transition: all .25s; }
+.fz-close:hover { color: var(--text); background: var(--surface-strong); transform: rotate(90deg); }
+
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */

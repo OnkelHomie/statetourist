@@ -246,6 +246,25 @@ async def firma_options_set(payload: dict = Body(...), admin: dict = Depends(get
 # ======================================================================
 #  Buildings (Immobilien) — admin only
 # ======================================================================
+@api_router.get("/firma/optionslots")
+async def firma_optionslots(admin: dict = Depends(get_current_admin)):
+    slots = []
+    used = 0
+    for n in range(1, 11):
+        try:
+            d = await sv_get(f"factory/options/{STATEV_FIRMA_ID}/{n}")
+        except HTTPException:
+            d = {}
+        if not isinstance(d, dict):
+            d = {}
+        data = d.get("data")
+        is_used = bool(data)
+        if is_used:
+            used += 1
+        slots.append({"slot": n, "used": is_used, "title": d.get("title") or "",
+                      "length": len(data) if data else 0, "lastUpdated": d.get("lastUpdated")})
+    return {"total": 10, "used": used, "slots": slots}
+
 @api_router.get("/buildings")
 async def buildings_list(admin: dict = Depends(get_current_admin)):
     return await sv_get("building/list")
@@ -382,7 +401,7 @@ def _trim(items, keys):
 async def publish(admin: dict = Depends(get_current_admin)):
     if not STATEV_API_SECRET:
         raise HTTPException(status_code=503, detail="API-Secret fehlt. Bitte STATEV_API_SECRET im Backend hinterlegen (API-Key-Übersicht).")
-    ev = _trim([_strip_id(d) for d in await db.content_events.find({}).sort("order", 1).to_list(500)], ("cat", "day", "mon", "title", "text", "time", "place"))
+    ev = _trim([_strip_id(d) for d in await db.content_events.find({}).sort("order", 1).to_list(500)], ("cat", "day", "mon", "title", "text", "time", "place", "bg"))
     nw = _trim([_strip_id(d) for d in await db.content_news.find({}).sort("order", 1).to_list(500)], ("tag", "tagLabel", "title", "text", "meta", "feature"))
     gl = _trim([_strip_id(d) for d in await db.content_gallery.find({}).sort("order", 1).to_list(500)], ("img", "grad", "cap", "ar"))
     firma = None

@@ -69,6 +69,25 @@
   var PUBLISHED_FIRMA = null;
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function imgSrc(v) { if (!v) return ""; return /^https?:\/\//.test(v) ? v : "images/" + v + ".png"; }
+
+  /* ---------- Freizeit-Popup ---------- */
+  function openFzModal(item) {
+    if (!item) return;
+    var back = document.createElement("div");
+    back.className = "fz-modal-backdrop";
+    back.setAttribute("data-testid", "freizeit-modal");
+    back.innerHTML = '<div class="fz-modal glass" role="dialog" aria-modal="true">' +
+      '<button class="fz-close" aria-label="Schließen" data-testid="freizeit-modal-close">&times;</button>' +
+      '<span class="fz-ic">' + icon(item.icon, 'width="30" height="30"') + '</span>' +
+      '<h3>' + esc(item.title) + '</h3><p>' + esc(item.long || item.desc) + '</p></div>';
+    document.body.appendChild(back);
+    requestAnimationFrame(function () { back.classList.add("show"); });
+    function close() { back.classList.remove("show"); setTimeout(function () { back.remove(); document.removeEventListener("keydown", onKey); }, 300); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    back.addEventListener("click", function (e) { if (e.target === back || e.target.closest(".fz-close")) close(); });
+    document.addEventListener("keydown", onKey);
+  }
 
   /* ---------- Inhalte aus der StateV vAPI (Page Options) lesen ----------
      Liest die vom Admin veröffentlichten, gechunkten Inhalte. Bei jedem
@@ -250,15 +269,15 @@
       { img: "golf", cat: "Freizeit", title: "GWC Golfplatz", desc: "Gepflegte Greens für eine entspannte Runde unter Palmen." }
     ],
     freizeit: [
-      { icon: "dice", title: "Bowling", desc: "Strikes mit Freunden im Bowlingcenter." },
-      { icon: "dice", title: "Casino", desc: "Roulette, Slots und Blackjack im Diamond." },
-      { icon: "wine", title: "Bars", desc: "Gemütliche Drinks an stilvollen Theken." },
-      { icon: "music", title: "Clubs", desc: "Tanzen bis in die frühen Morgenstunden." },
-      { icon: "target", title: "Paintball", desc: "Taktische Matches in der Paintball-Arena." },
-      { icon: "flag", title: "Rennstrecke", desc: "Teste deine Rundenzeiten auf dem Kurs." },
-      { icon: "film", title: "Kino", desc: "Aktuelle Filme auf großer Leinwand." },
-      { icon: "fish", title: "Angeln", desc: "Ruhige Stunden am Wasser mit der Rute." },
-      { icon: "mountain", title: "Wandern", desc: "Trails durch die Berge von Chiliad." }
+      { icon: "dice", title: "Bowling", desc: "Strikes mit Freunden im Bowlingcenter.", long: "Im modernen Bowlingcenter triffst du dich mit Freunden zu entspannten Runden. Mehrere Bahnen, Schuhverleih und eine Bar sorgen für einen gelungenen Abend – ideal für Gruppen und kleine Turniere." },
+      { icon: "dice", title: "Casino", desc: "Roulette, Slots und Blackjack im Diamond.", long: "Das Diamond Casino bietet Roulette, Blackjack, Spielautomaten und ein gehobenes Ambiente. Setze dein Glück aufs Spiel – aber behalte einen kühlen Kopf. Dresscode erwünscht." },
+      { icon: "wine", title: "Bars", desc: "Gemütliche Drinks an stilvollen Theken.", long: "Über die ganze Stadt verteilt findest du stilvolle Bars für jeden Geschmack – von der ruhigen Cocktailbar bis zur lebhaften Strandbar. Perfekt, um neue Leute kennenzulernen." },
+      { icon: "music", title: "Clubs", desc: "Tanzen bis in die frühen Morgenstunden.", long: "Die Clubs von Los Santos sind das Herz des Nachtlebens: Live-DJs, Lichtshows und Tanzflächen, die erst im Morgengrauen leerer werden. Schau in den Eventkalender für Specials." },
+      { icon: "target", title: "Paintball", desc: "Taktische Matches in der Paintball-Arena.", long: "In der Paintball-Arena trittst du in taktischen Team-Matches gegeneinander an. Ausrüstung wird gestellt – Teamgeist und schnelle Reflexe bringst du mit." },
+      { icon: "flag", title: "Rennstrecke", desc: "Teste deine Rundenzeiten auf dem Kurs.", long: "Auf der offiziellen Rennstrecke kannst du gefahrlos deine Rundenzeiten verbessern, Fahrzeuge testen und an Zeitrennen teilnehmen. Ein Muss für jeden Auto-Fan." },
+      { icon: "film", title: "Kino", desc: "Aktuelle Filme auf großer Leinwand.", long: "Das Kino zeigt regelmäßig wechselnde Filme auf großer Leinwand. Schnapp dir Popcorn und genieße einen entspannten Abend – auch für Dates bestens geeignet." },
+      { icon: "fish", title: "Angeln", desc: "Ruhige Stunden am Wasser mit der Rute.", long: "Ob am Pier, am See oder auf hoher See – Angeln ist die perfekte Entschleunigung. Mit etwas Geduld fängst du wertvolle Fische, die du verkaufen oder zubereiten kannst." },
+      { icon: "mountain", title: "Wandern", desc: "Trails durch die Berge von Chiliad.", long: "Die Trails rund um den Mount Chiliad bieten atemberaubende Ausblicke. Schnür die Wanderschuhe, nimm Wasser mit und entdecke die Natur von San Andreas zu Fuß." }
     ],
     companies: [
       { icon: "utensils", type: "Gastronomie", title: "Bayview Restaurant", desc: "Feine Küche mit Blick aufs Meer – ideal für besondere Anlässe." },
@@ -315,7 +334,8 @@
 
   function eventCardsHTML(filter) {
     return DATA.events.filter(function (e) { return !filter || filter === "Alle" || e.cat === filter; }).map(function (e, i) {
-      return '<article class="event-card glass reveal" data-delay="' + (i % 3) + '">' +
+      var bg = e.bg ? '<div class="ec-bg" style="background-image:url(\'' + imgSrc(e.bg) + '\')"></div>' : "";
+      return '<article class="event-card glass reveal' + (e.bg ? " has-bg" : "") + '" data-delay="' + (i % 3) + '">' + bg +
         '<div class="ec-top"><div class="ec-date"><b>' + e.day + '</b><span>' + e.mon + '</span></div><span class="ec-cat">' + e.cat + '</span></div>' +
         '<div class="ec-body"><h3>' + e.title + '</h3><p>' + e.text + '</p><div class="ec-meta">' +
         '<div>' + icon("clock", 'width="16" height="16"') + e.time + '</div>' +
@@ -354,8 +374,9 @@
 
   function freizeitHTML() {
     return DATA.freizeit.map(function (f, i) {
-      return '<article class="tile glass reveal" data-delay="' + (i % 3) + '">' +
-        '<span class="ti">' + icon(f.icon, 'width="23" height="23"') + '</span><h3>' + f.title + '</h3><p>' + f.desc + '</p></article>';
+      return '<button class="tile glass reveal" type="button" data-fz="' + i + '" data-delay="' + (i % 3) + '" data-testid="freizeit-' + i + '">' +
+        '<span class="ti">' + icon(f.icon, 'width="23" height="23"') + '</span><h3>' + f.title + '</h3><p>' + f.desc + '</p>' +
+        '<span class="tile-go">Mehr erfahren ' + ARR + '</span></button>';
     }).join("");
   }
 
@@ -384,8 +405,8 @@
 
   function galleryHTML() {
     return DATA.gallery.map(function (g) {
-      if (g.img) return '<figure class="m-item"><img src="images/' + g.img + '.png" alt="' + g.cap + '" loading="lazy" /><figcaption class="m-cap">' + g.cap + '</figcaption></figure>';
-      return '<figure class="m-item"><div class="m-grad" style="background:' + g.grad + ';--ar:' + g.ar + '">' + icon("camera", 'width="30" height="30"') + '</div><figcaption class="m-cap">' + g.cap + '</figcaption></figure>';
+      if (g.img) return '<figure class="m-item"><img src="' + imgSrc(g.img) + '" alt="' + esc(g.cap) + '" loading="lazy" /><figcaption class="m-cap">' + esc(g.cap) + '</figcaption></figure>';
+      return '<figure class="m-item"><div class="m-grad" style="background:' + g.grad + ';--ar:' + g.ar + '">' + icon("camera", 'width="30" height="30"') + '</div><figcaption class="m-cap">' + esc(g.cap) + '</figcaption></figure>';
     }).join("");
   }
 
@@ -572,6 +593,10 @@
     var yr = $("#year"); if (yr) yr.textContent = new Date().getFullYear();
 
     initToTop();
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-fz]");
+      if (b) openFzModal(DATA.freizeit[parseInt(b.getAttribute("data-fz"), 10)]);
+    });
     initNav();
     initFaq();
     initEvents();
