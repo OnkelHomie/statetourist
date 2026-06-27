@@ -407,6 +407,12 @@ body::after { /* fine grain texture */
 .company-card .cc-type { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); }
 .company-card .cc-body p { font-size: 0.88rem; color: var(--text-soft); margin-top: 8px; }
 
+/* Bild-Header für Karten (Unternehmen, Jobs, Freizeit) */
+.card-media { height: 168px; border-radius: var(--radius); overflow: hidden; position: relative; }
+.card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s var(--ease); }
+.job-card:hover .card-media img, .tile:hover .card-media img, .company-card:hover .card-media img { transform: scale(1.06); }
+.company-card.has-media { flex-direction: column; align-items: stretch; gap: 16px; }
+
 /* ==========================================================================
    ANFÄNGER GUIDE — TIMELINE
    ========================================================================== */

@@ -452,13 +452,15 @@ async def root():
 def _trim(items, keys):
     return [{k: it[k] for k in keys if k in it and it[k] != ""} for it in items]
 
-@api_router.post("/publish")
-async def publish(admin: dict = Depends(get_current_admin)):
-    if not STATEV_API_SECRET:
-        raise HTTPException(status_code=503, detail="API-Secret fehlt. Bitte STATEV_API_SECRET im Backend hinterlegen (API-Key-Übersicht).")
+async def _build_bundle():
     ev = _trim([_strip_id(d) for d in await db.content_events.find({}).sort("order", 1).to_list(500)], ("cat", "day", "mon", "title", "text", "time", "place", "bg"))
     nw = _trim([_strip_id(d) for d in await db.content_news.find({}).sort("order", 1).to_list(500)], ("tag", "tagLabel", "title", "text", "meta", "feature"))
     gl = _trim([_strip_id(d) for d in await db.content_gallery.find({}).sort("order", 1).to_list(500)], ("img", "grad", "cap", "ar"))
+    si = _trim([_strip_id(d) for d in await db.content_sights.find({}).sort("order", 1).to_list(500)], ("img", "cat", "title", "desc"))
+    pl = _trim([_strip_id(d) for d in await db.content_places.find({}).sort("order", 1).to_list(500)], ("cat", "icon", "title", "desc", "loc", "hours", "img"))
+    jb = _trim([_strip_id(d) for d in await db.content_jobs.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "diff", "pay", "beginner", "img"))
+    co = _trim([_strip_id(d) for d in await db.content_companies.find({}).sort("order", 1).to_list(500)], ("icon", "type", "title", "desc", "img"))
+    fz = _trim([_strip_id(d) for d in await db.content_freizeit.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "long", "img"))
     firma = None
     try:
         lst = await sv_get("factory/list/")
@@ -468,20 +470,41 @@ async def publish(admin: dict = Depends(get_current_admin)):
             firma = {k: firma.get(k) for k in ("id", "name", "isOpen", "address", "type") if k in firma}
     except Exception:
         firma = None
-    bundle = {"events": ev, "news": nw, "gallery": gl, "firma": firma}
+    bundle = {"events": ev, "news": nw, "gallery": gl, "sights": si, "places": pl,
+              "jobs": jb, "companies": co, "freizeit": fz, "firma": firma}
+    counts = {"events": len(ev), "news": len(nw), "gallery": len(gl), "sights": len(si),
+              "places": len(pl), "jobs": len(jb), "companies": len(co), "freizeit": len(fz)}
+    return bundle, counts, firma
+
+@api_router.post("/publish")
+async def publish(dry: bool = False, admin: dict = Depends(get_current_admin)):
+    bundle, counts, firma = await _build_bundle()
     raw = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"))
     CH = 2300
     chunks = [raw[i:i + CH] for i in range(0, len(raw), CH)]
-    if len(chunks) + 1 > 10:
-        raise HTTPException(status_code=413, detail=f"Inhalt zu groß ({len(raw)} Zeichen, {len(chunks)} Blöcke). Bitte Inhalte kürzen oder VAPI Premium nutzen (20 Slots).")
+    needed = len(chunks) + 1
+    fits = needed <= 10
+    if dry:
+        return {"dry": True, "bytes": len(raw), "slots": needed, "fits": fits,
+                "counts": counts, "firma": firma.get("name") if firma else None}
+    if not STATEV_API_SECRET:
+        raise HTTPException(status_code=503, detail="API-Secret fehlt. Bitte STATEV_API_SECRET im Backend hinterlegen (API-Key-Übersicht).")
+    if not fits:
+        raise HTTPException(status_code=413, detail=f"Inhalt zu groß ({len(raw)} Zeichen, {needed} Slots benötigt, 10 verfügbar). Bitte Inhalte/Bilder kürzen oder VAPI Premium nutzen (20 Slots).")
     await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID, "option": 1,
                                       "title": "site", "data": json.dumps({"c": len(chunks), "len": len(raw)})})
     for i, ch in enumerate(chunks):
         await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID,
                                           "option": 2 + i, "title": f"site:{i}", "data": ch})
-    return {"ok": True, "slots": len(chunks) + 1, "bytes": len(raw),
-            "counts": {"events": len(ev), "news": len(nw), "gallery": len(gl)},
-            "firma": firma.get("name") if firma else None}
+    # Verbleibende, zuvor genutzte Slots leeren (falls Inhalt geschrumpft ist)
+    for n in range(needed + 1, 11):
+        try:
+            await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID,
+                                              "option": n, "title": "", "data": ""})
+        except Exception:
+            pass
+    return {"ok": True, "slots": needed, "bytes": len(raw),
+            "counts": counts, "firma": firma.get("name") if firma else None}
 
 @api_router.get("/publish/status")
 async def publish_status(admin: dict = Depends(get_current_admin)):

@@ -67,6 +67,7 @@ table.tbl tr:hover td { background: var(--surface); color: var(--text); }
 .pill { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 650; background: rgba(54,214,198,.12); color: var(--teal); border: 1px solid rgba(54,214,198,.28); }
 .pill.warn { background: rgba(245,185,66,.12); color: var(--amber); border-color: rgba(245,185,66,.3); }
 .pill.muted { background: var(--surface); color: var(--text-dim); border-color: var(--border); }
+.pill.danger { background: rgba(239,111,94,.12); color: #ff8b7e; border-color: rgba(239,111,94,.3); }
 
 /* ---------- States ---------- */
 .state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 50px 20px; text-align: center; color: var(--text-dim); }

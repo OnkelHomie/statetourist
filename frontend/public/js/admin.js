@@ -240,8 +240,9 @@
   async function renderPublish(c) {
     c.innerHTML =
       '<div class="panel glass" style="max-width:680px"><div class="panel-head"><h3>Inhalte veröffentlichen</h3></div>' +
-        '<p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Überträgt die aktuellen Events, News, Galerie und den Firmen-Status in die StateV <b>Page Options</b> deiner Firma. Der öffentliche Guide liest diese Daten direkt aus der vAPI – StateV-konform, ohne eigenes Backend.</p>' +
-        '<div id="pubStatus" style="margin-bottom:18px"></div>' +
+        '<p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Überträgt alle Webseiten-Inhalte (Events, News, Galerie, Sehenswürdigkeiten, Stadt entdecken, Arbeiten, Unternehmen, Freizeit) inkl. Bilder sowie den Firmen-Status in die StateV <b>Page Options</b> deiner Firma. Der öffentliche Guide liest diese Daten direkt aus der vAPI – StateV-konform, ohne eigenes Backend.</p>' +
+        '<div id="pubStatus" style="margin-bottom:14px"></div>' +
+        '<div id="pubEstimate" style="margin-bottom:18px"></div>' +
         '<button class="btn-sm primary" id="pubBtn" data-testid="publish-btn">' + icon("upload", 'width="15" height="15" style="display:inline;vertical-align:-2px;margin-right:6px"') + 'Jetzt veröffentlichen</button>' +
         '<div id="pubResult" style="margin-top:16px"></div>' +
       "</div>";
@@ -254,15 +255,45 @@
     } else {
       st.innerHTML = '<div class="cms-item"><div class="ci-main"><b>Status: Noch nicht veröffentlicht</b><span>Klicke auf „Jetzt veröffentlichen", um die Inhalte zu übertragen.</span></div><span class="pill muted">inaktiv</span></div>';
     }
+
+    // Auslastungs-Vorschau (Dry-Run, ohne zu schreiben)
+    var est = document.getElementById("pubEstimate");
+    est.innerHTML = loader();
+    var btn = document.getElementById("pubBtn");
+    var e = await api("/publish?dry=true", { method: "POST" });
+    if (e.ok && e.data) {
+      var d = e.data;
+      var pct = Math.min(100, Math.round((d.slots / 10) * 100));
+      var fits = d.fits;
+      var barColor = fits ? (pct > 80 ? "var(--amber)" : "var(--teal)") : "var(--danger,#ef6f5e)";
+      var cnt = d.counts || {};
+      var cntStr = "Events " + (cnt.events || 0) + " · News " + (cnt.news || 0) + " · Galerie " + (cnt.gallery || 0) +
+        " · Sehensw. " + (cnt.sights || 0) + " · Orte " + (cnt.places || 0) + " · Jobs " + (cnt.jobs || 0) +
+        " · Unternehmen " + (cnt.companies || 0) + " · Freizeit " + (cnt.freizeit || 0);
+      est.innerHTML =
+        '<div class="panel" style="padding:16px;border:1px solid var(--border);border-radius:14px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b data-testid="publish-estimate">' + d.slots + ' / 10 Slots</b>' +
+        '<span class="pill ' + (fits ? "" : "danger") + '" data-testid="publish-fits">' + (fits ? "passt" : "zu groß") + '</span></div>' +
+        '<div class="usage-bar"><span style="width:' + pct + '%;background:' + barColor + '"></span></div>' +
+        '<div class="usage-label">' + (d.bytes || 0) + ' Zeichen in ' + d.slots + ' Slot(s) (Slot 1 = Manifest)</div>' +
+        '<div style="margin-top:8px;color:var(--text-dim);font-size:.8rem">' + cntStr + '</div>' +
+        (fits ? "" : '<div class="login-note err" style="margin-top:12px" data-testid="publish-warning">Der Inhalt überschreitet die 10 verfügbaren Slots (24.000 Zeichen). Bitte Bilder/Texte kürzen oder VAPI Premium nutzen, sonst schlägt das Veröffentlichen fehl.</div>') +
+        '</div>';
+      if (!fits && btn) { btn.disabled = true; btn.style.opacity = ".5"; }
+    } else {
+      est.innerHTML = "";
+    }
+
     document.getElementById("pubBtn").addEventListener("click", async function () {
-      var btn = this; btn.disabled = true; btn.style.opacity = ".6";
+      var b = this; b.disabled = true; b.style.opacity = ".6";
       var out = document.getElementById("pubResult"); out.innerHTML = loader();
       var res = await api("/publish", { method: "POST" });
-      btn.disabled = false; btn.style.opacity = "1";
+      b.disabled = false; b.style.opacity = "1";
       if (res.ok) {
         toast("Inhalte veröffentlicht.");
+        var cn = res.data.counts || {};
         out.innerHTML = '<div class="premium-box" style="border-color:rgba(54,214,198,.4);background:rgba(54,214,198,.05)"><div class="pb-ic" style="background:rgba(54,214,198,.12)">' + icon("upload", 'width="26" height="26"') + '</div>' +
-          '<h4>Erfolgreich veröffentlicht</h4><p>' + (res.data.bytes || 0) + ' Zeichen in ' + (res.data.slots || 0) + ' Slot(s) · Events: ' + res.data.counts.events + ', News: ' + res.data.counts.news + ', Galerie: ' + res.data.counts.gallery + '</p></div>';
+          '<h4>Erfolgreich veröffentlicht</h4><p>' + (res.data.bytes || 0) + ' Zeichen in ' + (res.data.slots || 0) + ' Slot(s) · Events ' + (cn.events || 0) + ', News ' + (cn.news || 0) + ', Galerie ' + (cn.gallery || 0) + ', Sehensw. ' + (cn.sights || 0) + ', Orte ' + (cn.places || 0) + ', Jobs ' + (cn.jobs || 0) + ', Unternehmen ' + (cn.companies || 0) + ', Freizeit ' + (cn.freizeit || 0) + '</p></div>';
         renderPublish(c);
       } else {
         out.innerHTML = errState(res.data && res.data.detail);
@@ -354,11 +385,49 @@
       { k: "img", l: "Bild-URL (pic.statev.de) ODER lokaler Dateiname ohne Endung – leer lassen für Farbverlauf" },
       { k: "grad", l: "Farbverlauf (CSS, optional, z. B. linear-gradient(135deg,#f5b942,#ef6f5e))" },
       { k: "ar", l: "Seitenverhältnis (z. B. 1 oder 1.5)" }
+    ],
+    sights: [
+      { k: "title", l: "Titel" }, { k: "cat", l: "Kategorie (z. B. Wahrzeichen)" },
+      { k: "img", l: "Bild-URL (pic.statev.de) ODER lokaler Dateiname ohne Endung" },
+      { k: "desc", l: "Beschreibung", area: true }
+    ],
+    places: [
+      { k: "title", l: "Titel" },
+      { k: "cat", l: "Kategorie", select: ["krankenhaus", "polizei", "feuerwehr", "rathaus", "arbeitsamt", "bank", "tankstelle", "garage", "shop"] },
+      { k: "icon", l: "Symbol", select: ["cross", "shield", "flame", "landmark", "briefcase", "coins", "fuel", "warehouse", "bag"] },
+      { k: "loc", l: "Standort (z. B. Pillbox Hill)" },
+      { k: "hours", l: "Öffnungszeiten (z. B. 24 Stunden geöffnet)" },
+      { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
+      { k: "desc", l: "Beschreibung", area: true }
+    ],
+    jobs: [
+      { k: "title", l: "Titel" },
+      { k: "icon", l: "Symbol", select: ["trash", "bus", "tram", "car", "fish", "tractor", "axe", "pickaxe", "truck", "target"] },
+      { k: "diff", l: "Schwierigkeit (1–5)", select: ["1", "2", "3", "4", "5"] },
+      { k: "pay", l: "Verdienst (z. B. €€ Mittel)" },
+      { k: "beginner", l: "Für Anfänger geeignet", bool: true },
+      { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
+      { k: "desc", l: "Beschreibung", area: true }
+    ],
+    companies: [
+      { k: "title", l: "Titel" }, { k: "type", l: "Typ (z. B. Gastronomie)" },
+      { k: "icon", l: "Symbol", select: ["utensils", "wrench", "car", "fuel", "bed", "music"] },
+      { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
+      { k: "desc", l: "Beschreibung", area: true }
+    ],
+    freizeit: [
+      { k: "title", l: "Titel" },
+      { k: "icon", l: "Symbol", select: ["dice", "wine", "music", "target", "flag", "film", "fish", "mountain"] },
+      { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
+      { k: "desc", l: "Kurzbeschreibung" },
+      { k: "long", l: "Langtext (Popup)", area: true }
     ]
   };
 
   function renderCms(c) {
-    var tabs = [["events", "Events", "calendar"], ["news", "News", "newspaper"], ["gallery", "Galerie", "image"]];
+    var tabs = [["events", "Events", "calendar"], ["news", "News", "newspaper"], ["gallery", "Galerie", "image"],
+      ["sights", "Sehenswürdigkeiten", "camera"], ["places", "Stadt entdecken", "pin"],
+      ["jobs", "Arbeiten", "briefcase"], ["companies", "Unternehmen", "store"], ["freizeit", "Freizeit", "dice"]];
     c.innerHTML =
       '<div class="cms-tabs">' + tabs.map(function (t) {
         return '<button class="btn-sm ' + (cmsKind === t[0] ? "primary" : "ghost") + '" data-cms="' + t[0] + '" data-testid="cms-tab-' + t[0] + '">' + icon(t[2], 'width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px"') + t[1] + "</button>";
@@ -381,12 +450,13 @@
     if (!items.length) { host.innerHTML = '<div class="panel glass">' + emptyState("Noch keine Einträge.") + "</div>"; return; }
     host.innerHTML = '<div class="cms-list">' + items.map(function (it) {
       var title = it.title || it.cap || "(ohne Titel)";
-      var sub = cmsKind === "gallery" ? (it.img ? "Bild: " + it.img : "Farbverlauf") : (it.meta || it.cat || it.text || "");
+      var sub = cmsKind === "gallery" ? (it.img ? "Bild: " + it.img : "Farbverlauf")
+        : (it.desc || it.meta || it.cat || it.type || it.text || "");
       var thumb = "";
-      if (cmsKind === "gallery") {
+      if (it.img || (cmsKind === "gallery" && it.grad)) {
         var src = it.img ? (/^https?:\/\//.test(it.img) ? it.img : "images/" + it.img + ".png") : null;
         var bg = src ? "url('" + src + "')" : (it.grad || "var(--surface)");
-        thumb = '<div class="cms-grid-thumb" style="background:' + bg + ';background-size:cover"></div>';
+        thumb = '<div class="cms-grid-thumb" style="background:' + bg + ';background-size:cover;background-position:center"></div>';
       }
       return '<div class="cms-item">' + thumb + '<div class="ci-main" style="flex:1"><b>' + escapeHtml(title) + "</b><span>" + escapeHtml(String(sub).slice(0, 80)) + "</span></div>" +
         '<div class="ci-actions"><button class="btn-sm ghost" data-edit="' + it.id + '">Bearbeiten</button>' +
@@ -428,6 +498,7 @@
         var k = el.getAttribute("data-f"); var val = el.value;
         if (val === "true") val = true; else if (val === "false") val = false;
         else if (k === "ar" && val !== "") val = parseFloat(val) || 1;
+        else if (k === "diff" && val !== "") val = parseInt(val, 10) || 1;
         payload[k] = val;
       });
       if (!payload.title && !payload.cap) return toast("Bitte mindestens einen Titel angeben.", "err");

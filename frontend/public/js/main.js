@@ -70,6 +70,10 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function imgSrc(v) { if (!v) return ""; return /^https?:\/\//.test(v) ? v : "images/" + v + ".png"; }
+  function cardMedia(img, alt) {
+    if (!img) return "";
+    return '<div class="card-media"><img src="' + imgSrc(img) + '" alt="' + esc(alt) + '" loading="lazy" /></div>';
+  }
 
   /* ---------- Freizeit-Popup ---------- */
   function openFzModal(item) {
@@ -119,6 +123,11 @@
       if (bundle.events && bundle.events.length) DATA.events = bundle.events;
       if (bundle.news && bundle.news.length) DATA.news = bundle.news;
       if (bundle.gallery && bundle.gallery.length) DATA.gallery = bundle.gallery;
+      if (bundle.sights && bundle.sights.length) DATA.sights = bundle.sights;
+      if (bundle.places && bundle.places.length) DATA.places = bundle.places;
+      if (bundle.jobs && bundle.jobs.length) DATA.jobs = bundle.jobs;
+      if (bundle.companies && bundle.companies.length) DATA.companies = bundle.companies;
+      if (bundle.freizeit && bundle.freizeit.length) DATA.freizeit = bundle.freizeit;
       if (bundle.firma) PUBLISHED_FIRMA = bundle.firma;
     } catch (e) { /* Fallback auf eingebaute Standardinhalte */ }
   }
@@ -348,6 +357,7 @@
       var dots = ""; for (var d = 1; d <= 5; d++) dots += '<i class="' + (d <= j.diff ? "on" : "") + '"></i>';
       return '<article class="job-card glass reveal" data-delay="' + (i % 3) + '">' +
         (j.beginner ? '<span class="beginner-badge">Für Anfänger</span>' : '') +
+        cardMedia(j.img, j.title) +
         '<span class="ji">' + icon(j.icon, 'width="24" height="24"') + '</span><h3>' + j.title + '</h3><p>' + j.desc + '</p>' +
         '<div class="job-stats"><div class="js"><span>Schwierigkeit</span><b class="diff">' + dots + '</b></div>' +
         '<div class="js"><span>Verdienst</span><b>' + j.pay + '</b></div></div></article>';
@@ -367,14 +377,15 @@
   function sightsHTML() {
     return DATA.sights.map(function (s, i) {
       return '<article class="sight-card reveal" data-delay="' + (i % 4) + '">' +
-        '<img src="images/' + s.img + '.png" alt="' + s.title + '" loading="lazy" />' +
+        '<img src="' + imgSrc(s.img) + '" alt="' + esc(s.title) + '" loading="lazy" />' +
         '<div class="sc-body"><span class="sc-cat">' + s.cat + '</span><h3>' + s.title + '</h3><p>' + s.desc + '</p></div></article>';
     }).join("");
   }
 
   function freizeitHTML() {
     return DATA.freizeit.map(function (f, i) {
-      return '<button class="tile glass reveal" type="button" data-fz="' + i + '" data-delay="' + (i % 3) + '" data-testid="freizeit-' + i + '">' +
+      return '<button class="tile glass reveal' + (f.img ? " has-media" : "") + '" type="button" data-fz="' + i + '" data-delay="' + (i % 3) + '" data-testid="freizeit-' + i + '">' +
+        cardMedia(f.img, f.title) +
         '<span class="ti">' + icon(f.icon, 'width="23" height="23"') + '</span><h3>' + f.title + '</h3><p>' + f.desc + '</p>' +
         '<span class="tile-go">Mehr erfahren ' + ARR + '</span></button>';
     }).join("");
@@ -382,8 +393,9 @@
 
   function companiesHTML() {
     return DATA.companies.map(function (c, i) {
-      return '<article class="company-card glass reveal" data-delay="' + (i % 2) + '">' +
-        '<div class="company-logo">' + icon(c.icon, 'width="30" height="30"') + '<span class="ph">Logo</span></div>' +
+      return '<article class="company-card glass reveal' + (c.img ? " has-media" : "") + '" data-delay="' + (i % 2) + '">' +
+        (c.img ? cardMedia(c.img, c.title)
+               : '<div class="company-logo">' + icon(c.icon, 'width="30" height="30"') + '<span class="ph">Logo</span></div>') +
         '<div class="cc-body"><span class="cc-type">' + c.type + '</span><h3>' + c.title + '</h3><p>' + c.desc + '</p></div></article>';
     }).join("");
   }
@@ -465,7 +477,8 @@
         return '<button class="marker" data-cat="' + c.id + '" style="left:' + c.x + '%;top:' + c.y + '%" aria-label="' + c.label + '">' + icon(c.icon, 'width="18" height="18"') + '<span class="tip">' + c.label + '</span></button>';
       }).join("");
       var places = DATA.places.map(function (p) {
-        return '<article class="place-card glass" data-cat="' + p.cat + '"><div class="pc-thumb" style="background:linear-gradient(135deg,#1a2330,#0c1017)"><span class="ci">' + icon(p.icon, 'width="24" height="24"') + '</span></div>' +
+        var thumbStyle = p.img ? "background:url('" + imgSrc(p.img) + "') center/cover" : "background:linear-gradient(135deg,#1a2330,#0c1017)";
+        return '<article class="place-card glass" data-cat="' + p.cat + '"><div class="pc-thumb" style="' + thumbStyle + '"><span class="ci">' + icon(p.icon, 'width="24" height="24"') + '</span></div>' +
           '<div class="pc-body"><h4>' + p.title + '</h4><p>' + p.desc + '</p><div class="pc-meta"><span>' + icon("pin", 'width="14" height="14"') + p.loc + '</span><span>' + icon("clock", 'width="14" height="14"') + p.hours + '</span></div></div></article>';
       }).join("");
       return section(pageHead("Stadt entdecken", 'Die <span class="grad-text">interaktive</span> Karte', "Wähle eine Kategorie und finde die wichtigsten Anlaufstellen der Stadt – mit Beschreibung, Standort und Öffnungszeiten.") +
@@ -575,19 +588,36 @@
   /* ======================================================================
      INIT
      ====================================================================== */
-  document.addEventListener("DOMContentLoaded", async function () {
+  document.addEventListener("DOMContentLoaded", function () {
     var page = document.body.getAttribute("data-page") || "start";
+    var VAPI_PAGES = ["start", "events", "galerie", "unternehmen", "sehenswuerdigkeiten", "arbeiten", "entdecken", "freizeit"];
 
-    // Vom Admin veröffentlichte Inhalte aus der StateV vAPI laden (mit Fallback)
-    if (page === "start" || page === "events" || page === "galerie" || page === "unternehmen") {
-      await loadFromVapi();
-    }
-
-    // Sprite + Navigation + Inhalt + Footer einbauen
+    // Sprite + Navigation einbauen (einmalig)
     document.body.insertAdjacentHTML("afterbegin", SPRITE + buildNav(page));
     var app = $("#app");
-    var renderer = PAGES[page] || PAGES.start;
-    app.innerHTML = renderer();
+    var firstRender = true;
+
+    function renderPage() {
+      var renderer = PAGES[page] || PAGES.start;
+      app.innerHTML = renderer();
+      initFaq();
+      initEvents();
+      initMap();
+      if (firstRender) {
+        initReveal();
+        firstRender = false;
+      } else {
+        // Neu-Rendern nach vAPI-Laden: Inhalte sofort & ohne Animation zeigen (kein Flackern)
+        app.querySelectorAll(".reveal").forEach(function (el) {
+          el.classList.add("in");
+          el.style.opacity = "1";
+          el.style.transform = "none";
+        });
+      }
+    }
+
+    // Sofort mit Standardinhalten rendern (kein Blockieren durch Netzwerk)
+    renderPage();
     app.insertAdjacentHTML("afterend", buildFooter());
 
     var yr = $("#year"); if (yr) yr.textContent = new Date().getFullYear();
@@ -598,9 +628,10 @@
       if (b) openFzModal(DATA.freizeit[parseInt(b.getAttribute("data-fz"), 10)]);
     });
     initNav();
-    initFaq();
-    initEvents();
-    initMap();
-    initReveal();
+
+    // Vom Admin veröffentlichte Inhalte aus der StateV vAPI nachladen und neu rendern (mit Fallback)
+    if (VAPI_PAGES.indexOf(page) >= 0) {
+      loadFromVapi().then(function () { renderPage(); });
+    }
   });
 })();

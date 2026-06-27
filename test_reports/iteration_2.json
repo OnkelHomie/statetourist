@@ -1,0 +1,50 @@
+{
+  "summary": "End-to-end test of P0 multi-section CMS (8 kinds), publish dry-run/real flow, admin UI tabs/forms, and 5 public guide pages. 27/27 backend pytest passing on preview URL. Admin Webseite tab shows all 8 CMS sub-tabs, companies form has Bild-URL field, Bayview Restaurant shows persisted img=casino with thumbnail in admin list and as .card-media header on the public page. Publish tab shows '5 / 10 Slots' / 'passt' + counts for all 8 sections (Events 1, News 5, Galerie 12, Sehensw. 8, Orte 9, Jobs 10, Unternehmen 6, Freizeit 9). All public guide pages render seeded content after async vAPI load.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_publish_and_kinds.py",
+    "/app/backend/tests/test_statev_admin.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "_build_bundle() in server.py reads all 8 collections sequentially with .to_list(500); fine for current seed sizes but consider asyncio.gather for parallel reads if catalogs grow.",
+    "publish() leaves slot-clearing in a try/except that swallows all exceptions silently (lines ~500-505). At least log the exception to aid debugging if clearing fails.",
+    "Hardcoded CH=2300 chunk size and 10-slot limit are not centralised constants; extract to module-level constants for tuning/documentation.",
+    "Counter empty-state bug from iteration_1 (/api/firma/counter -> 404) was not in scope of this review and was not retested; still applies per previous report.",
+    "Public GET /api/content/{kind} has no caching headers / ETag; OK for current scale but could reduce vAPI proxy load. Out of scope for current task."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_publish_and_kinds.py (new)",
+    "/app/test_reports/iteration_2.json (new)",
+    "/app/test_reports/pytest/pytest_results.xml (updated)"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 in test_publish_and_kinds.py)",
+    "frontend": "100% (admin 8 CMS tabs + publish flow + 5 guide pages all verified)"
+  },
+  "test_credentials": "Admin JWT signed at test runtime with JWT_SECRET from /app/backend/.env, sub=194164265383493632 (allowed via ADMIN_DISCORD_IDS), exp +2h. Sent as Cookie sv_admin (httpOnly, secure, sameSite=None). Test file generates the token automatically via subprocess so it never goes stale.",
+  "seed_data_creation": "Backend auto-seeds 6 events / 5 news / 12 gallery / 8 sights / 9 places / 10 jobs / 6 companies / 9 freizeit on startup (verified). CRUD test creates and deletes TEST_CRUD_COMPANY with img=casino to validate image persistence then cleans up.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Preview URL https://los-santos-guide.preview.emergentagent.com (from frontend/.env REACT_APP_BACKEND_URL). New pytest at /app/backend/tests/test_publish_and_kinds.py generates a fresh admin JWT on each run – just run pytest. For guide-page verification, ALWAYS wait 8-10s after navigation + scroll the page to allow IntersectionObserver reveals to fire and async vAPI bundle to apply. Note: entdecken.html uses category-switching – only the active category's .place-card is display:block, the rest are display:none. That is expected, not a bug.",
+  "verified_features": [
+    "GET /api/content/{kind} for all 8 kinds returns seeded list (>0 entries, no _id leak).",
+    "POST/PUT/DELETE /api/content/{sights,places,jobs,companies,freizeit} returns 401 without sv_admin cookie.",
+    "POST /api/content/companies with admin cookie creates entry; PUT updates img=casino; GET shows img field; DELETE removes.",
+    "POST /api/publish?dry=true returns dry=true, fits=true, slots=5, bytes>0, counts for all 8 kinds; writes nothing.",
+    "POST /api/publish (real) returns ok=true with same shape; GET /api/publish/status returns published=true.",
+    "Admin /admin.html with sv_admin cookie loads dashboard; Webseite tab exposes 8 cms-tab-* sub-tabs; companies tab shows list with Bayview Restaurant thumbnail and a 'Neuen Eintrag anlegen' form including Bild-URL field.",
+    "Publish tab shows publish-estimate '5 / 10 Slots', publish-fits 'passt', counts per section, publish-btn present.",
+    "Public guide pages render seeded cards: unternehmen.html (6/6 company-cards, 1 .card-media for Bayview/casino), arbeiten.html (10/10 job-cards), sehenswuerdigkeiten.html (8/8 sight-cards), freizeit.html (9/9 tiles), entdecken.html (9 place-cards, 1 active by category design)."
+  ],
+  "rca of the issue": "No defects found in this iteration."
+}
