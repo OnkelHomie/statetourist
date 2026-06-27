@@ -115,7 +115,7 @@
         '</div>' +
       '</div>' +
       '<div class="footer-bottom"><span>© <span id="year"></span> Los Santos Stadtführer · Ein StateV Community-Projekt. Alle Inhalte sind fiktiv (In-Game).</span>' +
-        '<div class="fb-links"><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="mailto:info@example.local">Kontakt</a></div></div>' +
+        '<div class="fb-links"><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">Kontakt</a></div></div>' +
       '</div></footer>';
   }
 
@@ -504,31 +504,8 @@
   /* ======================================================================
      INIT
      ====================================================================== */
-  /* ---------- Inhalte vom CMS laden (mit Fallback auf Standarddaten) ---------- */
-  async function loadContent() {
-    var kinds = ["events", "news", "gallery"];
-    try {
-      var ctrl = new AbortController();
-      var t = setTimeout(function () { ctrl.abort(); }, 4000);
-      var res = await Promise.all(kinds.map(function (k) {
-        return fetch("/api/content/" + k, { signal: ctrl.signal, credentials: "same-origin" })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .catch(function () { return null; });
-      }));
-      clearTimeout(t);
-      if (res[0] && res[0].length) DATA.events = res[0];
-      if (res[1] && res[1].length) DATA.news = res[1];
-      if (res[2] && res[2].length) DATA.gallery = res[2];
-    } catch (e) { /* offline / Download-Version -> Standarddaten */ }
-  }
-
-  document.addEventListener("DOMContentLoaded", async function () {
+  document.addEventListener("DOMContentLoaded", function () {
     var page = document.body.getAttribute("data-page") || "start";
-
-    // Dynamische Inhalte (Events/News/Galerie) laden, falls Backend verfügbar
-    if (page === "start" || page === "events" || page === "galerie") {
-      await loadContent();
-    }
 
     // Sprite + Navigation + Inhalt + Footer einbauen
     document.body.insertAdjacentHTML("afterbegin", SPRITE + buildNav(page));
