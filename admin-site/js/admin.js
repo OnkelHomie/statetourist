@@ -397,6 +397,8 @@
       { k: "icon", l: "Symbol", select: ["cross", "shield", "flame", "landmark", "briefcase", "coins", "fuel", "warehouse", "bag"] },
       { k: "loc", l: "Standort (z. B. Pillbox Hill)" },
       { k: "hours", l: "Öffnungszeiten (z. B. 24 Stunden geöffnet)" },
+      { k: "x", l: "Karten-Position X (%)" },
+      { k: "y", l: "Karten-Position Y (%)" },
       { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
       { k: "desc", l: "Beschreibung", area: true }
     ],
@@ -432,13 +434,57 @@
       '<div class="cms-tabs">' + tabs.map(function (t) {
         return '<button class="btn-sm ' + (cmsKind === t[0] ? "primary" : "ghost") + '" data-cms="' + t[0] + '" data-testid="cms-tab-' + t[0] + '">' + icon(t[2], 'width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px"') + t[1] + "</button>";
       }).join("") + "</div>" +
+      '<div class="cms-actions"><button class="btn-sm ghost" id="cmsPreview" data-testid="cms-preview-btn">' + icon("globe", 'width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:6px"') + 'Vorschau dieser Seite (Entwurf)</button></div>' +
       '<div id="cmsList"></div>' +
       '<div class="panel glass" id="cmsForm" style="max-width:680px"></div>';
     c.querySelectorAll("[data-cms]").forEach(function (b) {
       b.addEventListener("click", function () { cmsKind = b.getAttribute("data-cms"); renderCms(c); });
     });
+    document.getElementById("cmsPreview").addEventListener("click", function () { openPreview(cmsKind); });
     loadCmsList();
     renderCmsForm(null);
+  }
+
+  var PREVIEW_PAGES = { events: "events", news: "index", gallery: "galerie", sights: "sehenswuerdigkeiten", places: "entdecken", jobs: "arbeiten", companies: "unternehmen", freizeit: "freizeit" };
+
+  function openPreview(kind) {
+    var pageName = PREVIEW_PAGES[kind] || "index";
+    var base = (window.ADMIN_API_BASE || "").replace(/\/$/, "");
+    var src = base + "/" + pageName + ".html?previewApi=" + encodeURIComponent(window.ADMIN_API_BASE || "");
+    var back = document.createElement("div");
+    back.className = "preview-backdrop";
+    back.setAttribute("data-testid", "preview-modal");
+    back.innerHTML = '<div class="preview-modal"><div class="pv-head"><b>Vorschau · ' + pageName + '.html <span class="pv-note">(Entwurf – noch nicht veröffentlicht)</span></b>' +
+      '<button class="btn-sm ghost" id="pvClose" data-testid="preview-close">Schließen</button></div>' +
+      '<iframe src="' + src + '" title="Vorschau" data-testid="preview-iframe"></iframe></div>';
+    document.body.appendChild(back);
+    function close() { back.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    back.addEventListener("click", function (e) { if (e.target === back || e.target.closest("#pvClose")) close(); });
+    document.addEventListener("keydown", onKey);
+  }
+
+  function initMapPicker(form, item) {
+    var pick = form.querySelector("#mapPick");
+    var marker = form.querySelector("#mpMarker");
+    var hint = form.querySelector("#mpHint");
+    var xInput = form.querySelector('[data-f="x"]');
+    var yInput = form.querySelector('[data-f="y"]');
+    if (!pick) return;
+    function place(x, y) {
+      marker.style.display = "block";
+      marker.style.left = x + "%";
+      marker.style.top = y + "%";
+      hint.textContent = "Position: X " + x + "% · Y " + y + "% (zum Ändern erneut klicken)";
+    }
+    if (item && item.x !== undefined && item.x !== "" && item.y !== undefined && item.y !== "") place(item.x, item.y);
+    pick.addEventListener("click", function (e) {
+      var r = pick.getBoundingClientRect();
+      var x = Math.max(0, Math.min(100, Math.round(((e.clientX - r.left) / r.width) * 1000) / 10));
+      var y = Math.max(0, Math.min(100, Math.round(((e.clientY - r.top) / r.height) * 1000) / 10));
+      xInput.value = x; yInput.value = y;
+      place(x, y);
+    });
   }
 
   async function loadCmsList() {
@@ -479,6 +525,12 @@
     var editing = !!item;
     var fields = FIELDS[cmsKind];
     var form = document.getElementById("cmsForm");
+    var mapPicker = cmsKind === "places"
+      ? '<div class="field"><label>Marker auf der Karte setzen – klicke die Position an</label>' +
+        '<div class="map-pick" id="mapPick" data-testid="map-pick"><img src="images/citymap.png" alt="Karte" draggable="false" />' +
+        '<span class="mp-marker" id="mpMarker" style="display:none"></span></div>' +
+        '<div class="mp-hint" id="mpHint">Noch keine Position gesetzt.</div></div>'
+      : "";
     form.innerHTML =
       '<div class="panel-head"><h3>' + (editing ? "Eintrag bearbeiten" : "Neuen Eintrag anlegen") + "</h3>" +
       (editing ? '<button class="btn-sm ghost" id="cmsCancel">Abbrechen</button>' : "") + "</div>" +
@@ -488,9 +540,10 @@
         if (f.select) return '<div class="field"><label>' + f.l + '</label><select data-f="' + f.k + '">' + f.select.map(function (o) { return '<option value="' + o + '"' + (v === o ? " selected" : "") + ">" + o + "</option>"; }).join("") + "</select></div>";
         if (f.area) return '<div class="field"><label>' + f.l + '</label><textarea data-f="' + f.k + '">' + escapeHtml(String(v)) + "</textarea></div>";
         return '<div class="field"><label>' + f.l + '</label><input data-f="' + f.k + '" value="' + escapeHtml(String(v)) + '" /></div>';
-      }).join("") +
+      }).join("") + mapPicker +
       '<div class="form-actions"><button class="btn-sm primary" id="cmsSave" data-testid="cms-save">' + (editing ? "Aktualisieren" : "Anlegen") + "</button></div>";
 
+    if (cmsKind === "places") initMapPicker(form, item);
     if (editing) document.getElementById("cmsCancel").addEventListener("click", function () { renderCmsForm(null); });
     document.getElementById("cmsSave").addEventListener("click", async function () {
       var payload = {};
@@ -499,6 +552,7 @@
         if (val === "true") val = true; else if (val === "false") val = false;
         else if (k === "ar" && val !== "") val = parseFloat(val) || 1;
         else if (k === "diff" && val !== "") val = parseInt(val, 10) || 1;
+        else if ((k === "x" || k === "y") && val !== "") val = Math.round(parseFloat(val) * 10) / 10;
         payload[k] = val;
       });
       if (!payload.title && !payload.cap) return toast("Bitte mindestens einen Titel angeben.", "err");

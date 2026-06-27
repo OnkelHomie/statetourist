@@ -123,3 +123,19 @@ table.tbl tr:hover td { background: var(--surface); color: var(--text); }
   .form-row { grid-template-columns: 1fr; }
   .dash-content, .dash-top { padding: 18px; }
 }
+
+/* CMS Vorschau-Button-Reihe */
+.cms-actions { margin: 0 0 18px; }
+
+/* Karten-Marker-Picker (Orte) */
+.map-pick { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); cursor: crosshair; line-height: 0; }
+.map-pick img { width: 100%; display: block; user-select: none; }
+.map-pick .mp-marker { position: absolute; width: 26px; height: 26px; transform: translate(-50%, -50%); border-radius: 50% 50% 50% 4px; rotate: 45deg; background: var(--accent-grad); box-shadow: 0 6px 16px -4px rgba(245,160,66,.9); pointer-events: none; }
+.mp-hint { margin-top: 8px; font-size: 0.82rem; color: var(--text-dim); }
+
+/* Vorschau-Modal (iframe) */
+.preview-backdrop { position: fixed; inset: 0; z-index: 200; background: rgba(4,6,9,0.8); backdrop-filter: blur(8px); display: grid; place-items: center; padding: 28px; }
+.preview-modal { width: 100%; max-width: 1280px; height: 88vh; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-soft); }
+.preview-modal .pv-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+.preview-modal .pv-note { color: var(--text-dim); font-weight: 400; font-size: 0.82rem; margin-left: 4px; }
+.preview-modal iframe { flex: 1; width: 100%; border: 0; background: var(--bg); }

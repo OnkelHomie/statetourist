@@ -381,15 +381,15 @@ DEFAULT_SIGHTS = [
     {"img": "golf", "cat": "Freizeit", "title": "GWC Golfplatz", "desc": "Gepflegte Greens für eine entspannte Runde unter Palmen."},
 ]
 DEFAULT_PLACES = [
-    {"cat": "krankenhaus", "icon": "cross", "title": "Pillbox Hill Medical", "desc": "Zentrales Krankenhaus mit Notaufnahme rund um die Uhr.", "loc": "Pillbox Hill", "hours": "24 Stunden geöffnet"},
-    {"cat": "polizei", "icon": "shield", "title": "LSPD Mission Row", "desc": "Hauptrevier des Los Santos Police Department.", "loc": "Mission Row", "hours": "24 Stunden besetzt"},
-    {"cat": "feuerwehr", "icon": "flame", "title": "Feuerwache Davis", "desc": "Brandbekämpfung und Rettungsdienst für den Süden.", "loc": "Davis", "hours": "24 Stunden einsatzbereit"},
-    {"cat": "rathaus", "icon": "landmark", "title": "Rathaus Los Santos", "desc": "Personalausweis, Anmeldungen und Bürgerservice.", "loc": "Vinewood Blvd.", "hours": "Mo–Fr 08:00–20:00"},
-    {"cat": "arbeitsamt", "icon": "briefcase", "title": "Arbeitsamt", "desc": "Anmeldung für alle städtischen Jobs und Berufe.", "loc": "Legion Square", "hours": "Täglich 07:00–22:00"},
-    {"cat": "bank", "icon": "coins", "title": "Fleeca Bank", "desc": "Bankkonto eröffnen, Geld abheben und Überweisungen.", "loc": "Innenstadt", "hours": "Mo–Sa 09:00–18:00"},
-    {"cat": "tankstelle", "icon": "fuel", "title": "LTD Tankstelle", "desc": "Kraftstoff, Snacks und kleine Einkäufe.", "loc": "Mehrere Standorte", "hours": "24 Stunden geöffnet"},
-    {"cat": "garage", "icon": "warehouse", "title": "Zentralgarage", "desc": "Hier holst du deine Fahrzeuge ab und stellst sie ab.", "loc": "Innenstadt & Bezirke", "hours": "Immer zugänglich"},
-    {"cat": "shop", "icon": "bag", "title": "24/7 Supermarkt", "desc": "Lebensmittel, Getränke und Alltagsbedarf.", "loc": "Stadtweit", "hours": "24 Stunden geöffnet"},
+    {"cat": "krankenhaus", "icon": "cross", "title": "Pillbox Hill Medical", "desc": "Zentrales Krankenhaus mit Notaufnahme rund um die Uhr.", "loc": "Pillbox Hill", "hours": "24 Stunden geöffnet", "x": 48, "y": 48},
+    {"cat": "polizei", "icon": "shield", "title": "LSPD Mission Row", "desc": "Hauptrevier des Los Santos Police Department.", "loc": "Mission Row", "hours": "24 Stunden besetzt", "x": 53, "y": 52},
+    {"cat": "feuerwehr", "icon": "flame", "title": "Feuerwache Davis", "desc": "Brandbekämpfung und Rettungsdienst für den Süden.", "loc": "Davis", "hours": "24 Stunden einsatzbereit", "x": 45, "y": 70},
+    {"cat": "rathaus", "icon": "landmark", "title": "Rathaus Los Santos", "desc": "Personalausweis, Anmeldungen und Bürgerservice.", "loc": "Vinewood Blvd.", "hours": "Mo–Fr 08:00–20:00", "x": 40, "y": 42},
+    {"cat": "arbeitsamt", "icon": "briefcase", "title": "Arbeitsamt", "desc": "Anmeldung für alle städtischen Jobs und Berufe.", "loc": "Legion Square", "hours": "Täglich 07:00–22:00", "x": 44, "y": 55},
+    {"cat": "bank", "icon": "coins", "title": "Fleeca Bank", "desc": "Bankkonto eröffnen, Geld abheben und Überweisungen.", "loc": "Innenstadt", "hours": "Mo–Sa 09:00–18:00", "x": 50, "y": 45},
+    {"cat": "tankstelle", "icon": "fuel", "title": "LTD Tankstelle", "desc": "Kraftstoff, Snacks und kleine Einkäufe.", "loc": "Mehrere Standorte", "hours": "24 Stunden geöffnet", "x": 62, "y": 40},
+    {"cat": "garage", "icon": "warehouse", "title": "Zentralgarage", "desc": "Hier holst du deine Fahrzeuge ab und stellst sie ab.", "loc": "Innenstadt & Bezirke", "hours": "Immer zugänglich", "x": 35, "y": 50},
+    {"cat": "shop", "icon": "bag", "title": "24/7 Supermarkt", "desc": "Lebensmittel, Getränke und Alltagsbedarf.", "loc": "Stadtweit", "hours": "24 Stunden geöffnet", "x": 58, "y": 62},
 ]
 DEFAULT_JOBS = [
     {"icon": "trash", "title": "Müllabfuhr", "desc": "Sammle Müll in der ganzen Stadt ein – ein verlässlicher Einstiegsjob.", "diff": 1, "pay": "€ Niedrig", "beginner": True},
@@ -457,7 +457,7 @@ async def _build_bundle():
     nw = _trim([_strip_id(d) for d in await db.content_news.find({}).sort("order", 1).to_list(500)], ("tag", "tagLabel", "title", "text", "meta", "feature"))
     gl = _trim([_strip_id(d) for d in await db.content_gallery.find({}).sort("order", 1).to_list(500)], ("img", "grad", "cap", "ar"))
     si = _trim([_strip_id(d) for d in await db.content_sights.find({}).sort("order", 1).to_list(500)], ("img", "cat", "title", "desc"))
-    pl = _trim([_strip_id(d) for d in await db.content_places.find({}).sort("order", 1).to_list(500)], ("cat", "icon", "title", "desc", "loc", "hours", "img"))
+    pl = _trim([_strip_id(d) for d in await db.content_places.find({}).sort("order", 1).to_list(500)], ("cat", "icon", "title", "desc", "loc", "hours", "img", "x", "y"))
     jb = _trim([_strip_id(d) for d in await db.content_jobs.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "diff", "pay", "beginner", "img"))
     co = _trim([_strip_id(d) for d in await db.content_companies.find({}).sort("order", 1).to_list(500)], ("icon", "type", "title", "desc", "img"))
     fz = _trim([_strip_id(d) for d in await db.content_freizeit.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "long", "img"))
@@ -520,6 +520,12 @@ async def publish_status(admin: dict = Depends(get_current_admin)):
     except Exception:
         meta = {}
     return {"published": True, "chunks": meta.get("c"), "len": meta.get("len"), "lastUpdated": slot.get("lastUpdated")}
+
+@api_router.get("/preview/bundle")
+async def preview_bundle(admin: dict = Depends(get_current_admin)):
+    """Aktueller Entwurfsstand (aus der DB) für die Admin-Vorschau – noch NICHT veröffentlicht."""
+    bundle, _, _ = await _build_bundle()
+    return bundle
 
 app.include_router(api_router)
 app.add_middleware(

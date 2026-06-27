@@ -120,16 +120,33 @@
       clearTimeout(to);
       var raw = parts.map(function (p) { return p && p.data ? p.data : ""; }).join("");
       var bundle = JSON.parse(raw);
-      if (bundle.events && bundle.events.length) DATA.events = bundle.events;
-      if (bundle.news && bundle.news.length) DATA.news = bundle.news;
-      if (bundle.gallery && bundle.gallery.length) DATA.gallery = bundle.gallery;
-      if (bundle.sights && bundle.sights.length) DATA.sights = bundle.sights;
-      if (bundle.places && bundle.places.length) DATA.places = bundle.places;
-      if (bundle.jobs && bundle.jobs.length) DATA.jobs = bundle.jobs;
-      if (bundle.companies && bundle.companies.length) DATA.companies = bundle.companies;
-      if (bundle.freizeit && bundle.freizeit.length) DATA.freizeit = bundle.freizeit;
-      if (bundle.firma) PUBLISHED_FIRMA = bundle.firma;
+      applyBundle(bundle);
     } catch (e) { /* Fallback auf eingebaute Standardinhalte */ }
+  }
+
+  function applyBundle(bundle) {
+    if (!bundle) return;
+    if (bundle.events && bundle.events.length) DATA.events = bundle.events;
+    if (bundle.news && bundle.news.length) DATA.news = bundle.news;
+    if (bundle.gallery && bundle.gallery.length) DATA.gallery = bundle.gallery;
+    if (bundle.sights && bundle.sights.length) DATA.sights = bundle.sights;
+    if (bundle.places && bundle.places.length) DATA.places = bundle.places;
+    if (bundle.jobs && bundle.jobs.length) DATA.jobs = bundle.jobs;
+    if (bundle.companies && bundle.companies.length) DATA.companies = bundle.companies;
+    if (bundle.freizeit && bundle.freizeit.length) DATA.freizeit = bundle.freizeit;
+    if (bundle.firma) PUBLISHED_FIRMA = bundle.firma;
+  }
+
+  /* ---------- Admin-Vorschau: Entwurfsdaten direkt vom Backend laden ----------
+     Nur aktiv, wenn die URL den Parameter ?previewApi enthält (vom Admin gesetzt).
+     Der reguläre, im Spiel ausgelieferte Guide nutzt diesen Pfad NIE und bleibt statisch. */
+  async function loadPreview(apiBase) {
+    try {
+      var url = (apiBase || "").replace(/\/$/, "") + "/api/preview/bundle";
+      var r = await fetch(url, { credentials: "include" });
+      if (!r.ok) return;
+      applyBundle(await r.json());
+    } catch (e) { /* still mit Standardinhalten */ }
   }
 
   function firmaStatusHTML() {
@@ -154,9 +171,7 @@
     { p: "sehenswuerdigkeiten", href: "sehenswuerdigkeiten.html", label: "Sehenswürdigkeiten" },
     { p: "freizeit", href: "freizeit.html", label: "Freizeit" },
     { p: "unternehmen", href: "unternehmen.html", label: "Unternehmen" },
-    { p: "events", href: "events.html", label: "Events" },
-    { p: "guide", href: "guide.html", label: "Anfänger Guide" },
-    { p: "faq", href: "faq.html", label: "FAQ" }
+    { p: "events", href: "events.html", label: "Events" }
   ];
 
   var brandHTML = '<a href="index.html" class="brand" aria-label="Los Santos Stadtführer Startseite">' +
@@ -170,7 +185,7 @@
     return '<nav class="nav" id="nav" data-testid="main-nav"><div class="container">' +
       brandHTML +
       '<ul class="nav-links" id="navLinks">' + links + '</ul>' +
-      '<a href="guide.html" class="btn btn--primary nav-cta" data-testid="nav-cta">Jetzt starten ' + ARR + '</a>' +
+      '<a href="entdecken.html" class="btn btn--primary nav-cta" data-testid="nav-cta">Stadt entdecken ' + ARR + '</a>' +
       '<button class="nav-toggle" id="navToggle" aria-label="Menü öffnen" data-testid="nav-toggle"><span></span><span></span><span></span></button>' +
       '</div></nav>';
   }
@@ -425,10 +440,10 @@
   function quicklinksHTML() {
     var items = [
       { href: "entdecken.html", icon: "pin", t: "Stadt entdecken", d: "Interaktive Karte mit allen Anlaufstellen." },
-      { href: "arbeiten.html", icon: "briefcase", t: "Arbeiten", d: "10 Berufe mit Verdienst & Schwierigkeit." },
+      { href: "arbeiten.html", icon: "briefcase", t: "Arbeiten", d: "Berufe mit Verdienst & Schwierigkeit." },
       { href: "nahverkehr.html", icon: "bus", t: "Nahverkehr", d: "Bus- und Straßenbahnlinien der Stadt." },
       { href: "sehenswuerdigkeiten.html", icon: "camera", t: "Sehenswürdigkeiten", d: "Die ikonischsten Orte von Los Santos." },
-      { href: "guide.html", icon: "sparkle", t: "Anfänger Guide", d: "Deine ersten Schritte in 8 Etappen." },
+      { href: "freizeit.html", icon: "dice", t: "Freizeit", d: "Bowling, Casino, Clubs und mehr." },
       { href: "events.html", icon: "calendar", t: "Events", d: "Kommende Veranstaltungen im Überblick." }
     ];
     return items.map(function (q, i) {
@@ -445,8 +460,8 @@
       '<h1 class="reveal" data-delay="1">Willkommen in <span class="grad-text">Los&nbsp;Santos</span></h1>' +
       '<p class="sub reveal" data-delay="2">Entdecke die lebendigste Stadt San Andreas. Dein Wegweiser durch Sehenswürdigkeiten, Jobs, Nahverkehr und das pulsierende Stadtleben.</p>' +
       '<div class="hero-actions reveal" data-delay="3">' +
-      '<a href="guide.html" class="btn btn--primary" data-testid="hero-cta-guide">Anfänger Guide ' + ARR + '</a>' +
-      '<a href="entdecken.html" class="btn btn--ghost" data-testid="hero-cta-explore">' + icon("pin", 'width="18" height="18"') + ' Stadt entdecken</a></div>' +
+      '<a href="entdecken.html" class="btn btn--primary" data-testid="hero-cta-explore">' + icon("pin", 'width="18" height="18"') + ' Stadt entdecken</a>' +
+      '<a href="events.html" class="btn btn--ghost" data-testid="hero-cta-events">Events ansehen ' + ARR + '</a></div>' +
       '<div class="hero-stats reveal" data-delay="4">' +
       '<div class="stat glass"><b>8+</b><span>Stadtbezirke</span></div>' +
       '<div class="stat glass"><b>10</b><span>Berufe</span></div>' +
@@ -473,8 +488,8 @@
         return '<button class="cat-btn' + (i === 0 ? " active" : "") + '" data-cat="' + c.id + '" data-testid="cat-' + c.id + '">' +
           '<span class="ci">' + icon(c.icon, 'width="17" height="17"') + '</span>' + c.label + '</button>';
       }).join("");
-      var markers = DATA.categories.map(function (c) {
-        return '<button class="marker" data-cat="' + c.id + '" style="left:' + c.x + '%;top:' + c.y + '%" aria-label="' + c.label + '">' + icon(c.icon, 'width="18" height="18"') + '<span class="tip">' + c.label + '</span></button>';
+      var markers = DATA.places.filter(function (p) { return p.x != null && p.y != null && p.x !== "" && p.y !== ""; }).map(function (p) {
+        return '<button class="marker" data-cat="' + p.cat + '" style="left:' + p.x + '%;top:' + p.y + '%" aria-label="' + esc(p.title) + '">' + icon(p.icon || "pin", 'width="18" height="18"') + '<span class="tip">' + esc(p.title) + '</span></button>';
       }).join("");
       var places = DATA.places.map(function (p) {
         var thumbStyle = p.img ? "background:url('" + imgSrc(p.img) + "') center/cover" : "background:linear-gradient(135deg,#1a2330,#0c1017)";
@@ -629,8 +644,11 @@
     });
     initNav();
 
-    // Vom Admin veröffentlichte Inhalte aus der StateV vAPI nachladen und neu rendern (mit Fallback)
-    if (VAPI_PAGES.indexOf(page) >= 0) {
+    // Inhalte nachladen und neu rendern. Admin-Vorschau (?previewApi) hat Vorrang.
+    var sp = new URLSearchParams(window.location.search);
+    if (sp.has("previewApi")) {
+      loadPreview(sp.get("previewApi") || "").then(function () { renderPage(); });
+    } else if (VAPI_PAGES.indexOf(page) >= 0) {
       loadFromVapi().then(function () { renderPage(); });
     }
   });
