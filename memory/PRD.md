@@ -18,7 +18,17 @@ Vollständig responsive, moderne Tourismus-/Stadtführer-Webseite für den State
 - Animationen: Fade-In/Scroll-Reveal, Hover-Lift, weiche Übergänge.
 - Verifiziert per Screenshot/Interaktionstest (Karte, Event-Filter, FAQ, Mobile-Nav, Responsiveness).
 
+## StateV API + Admin (2026-06-27)
+- **Backend (FastAPI, /app/backend/server.py):** Proxy zur StateV vAPI (`https://api.statev.dev/req`, Bearer-Key sicher in backend/.env). Endpoints `/api/firma/*` (overview, inventory, machine, counter, productions, vehicles, marketoffers, buylog, bankaccounts, options GET/POST), `/api/buildings/*`, alle per Discord-JWT-Cookie geschützt. Premium-gesperrte Endpoints → 200 mit `_premium:true`. Leere-Zustand-404 (z. B. „Counter is empty") werden zu leerem 200 normalisiert.
+- **Auth:** Discord OAuth2 (Authorization Code, scope identify) → JWT-Cookie `sv_admin` (HTTP-only, secure). Zugriff via Allowlist `ADMIN_DISCORD_IDS` (leer = jeder eingeloggte Discord-User). Endpoints `/api/auth/login`, `/api/auth/discord/callback`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/config`.
+- **CMS (MongoDB):** `/api/content/{events|news|gallery}` – GET öffentlich, POST/PUT/DELETE admin. Auto-Seeding der Standardinhalte. Der öffentliche Guide (main.js `loadContent`) lädt diese mit Fallback.
+- **Admin-Frontend (/admin.html, js/admin.js, css/admin.css):** Discord-Login-Gate, Dashboard im Guide-Design mit Tabs: Firma (Übersicht/Lager/Maschinen/Theke/Produktionen/Fahrzeuge/Marktangebote/Verkaufslog/Bankkonten/Optionen), Immobilien, Webseite-CMS (Events/News/Galerie CRUD).
+- **Getestet:** Backend 13/14→14/14 (counter-Fix), Admin-UI 100% (Dashboard, KPIs, Premium-Box, CMS-CRUD, Logout, Guide liest CMS). Discord-OAuth-Flow nicht automatisiert getestet (echtes Login nötig).
+- **Offen (benötigt User):** DISCORD_CLIENT_ID/SECRET + Redirect-URI registrieren, ADMIN_DISCORD_IDS setzen.
+
 ## Backlog / Next
+- P0: Discord-Credentials hinterlegen, damit der Admin-Login live funktioniert.
 - P1: Reales StateV-Verifizierungssiegel-Bild einsetzen (Platzhalter vorhanden).
-- P2: Echte In-Game-Standortkoordinaten für Kartenmarker; Galerie um echte Community-Bilder erweitern.
-- P2: Optionaler DE/EN-Sprachumschalter.
+- P1: VAPI Premium für Bankkonten/Transaktionen (aktuell serverseitig gesperrt).
+- P2: Bild-Upload (Object Storage) statt Dateiname/Verlauf im Galerie-CMS.
+- P2: In-Game-Koordinaten für Kartenmarker; DE/EN-Sprachumschalter.

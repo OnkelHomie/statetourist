@@ -60,6 +60,8 @@ async def sv_get(path: str):
         data = {"raw": r.text}
     if r.status_code == 401 and isinstance(data, dict) and "Premium" in str(data.get("message", "")):
         return {"_premium": True, "message": data.get("message")}
+    if r.status_code == 404 and isinstance(data, dict) and "empty" in str(data.get("message", "")).lower():
+        return {}
     if r.status_code >= 400:
         msg = data.get("message") if isinstance(data, dict) else str(data)
         raise HTTPException(status_code=r.status_code, detail=msg or "StateV API Fehler")
