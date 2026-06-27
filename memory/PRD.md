@@ -4,9 +4,10 @@
 Vollständig responsive, moderne Tourismus-/Stadtführer-Webseite für den StateV Ingame Browser (Los Santos & San Andreas). Zielgruppe: neue + erfahrene Spieler. Strenge Regeln: ausschließlich Plain HTML/CSS/JS, kein Backend, keine DB, keine externen APIs/Fonts/CDN/Frameworks, alle Assets lokal, Platz für StateV-Verifizierungssiegel im Footer.
 
 ## Architektur
-- 100% statisch, framework-frei. Geliefert in `/app/frontend/public/` (Live-Vorschau) und als Standalone-Kopie `/app/statev-site/` + ZIP `/app/statev-los-santos.zip`.
-- `index.html` (semantisches HTML5 + Inline-SVG-Icon-Sprite), `css/styles.css` (Dark/Glassmorphism Design-System mit CSS-Variablen), `js/main.js` (Vanilla JS: zentrale DATA-Objekte → Rendering, IntersectionObserver Scroll-Reveal, Scroll-Spy, FAQ-Accordion, Event-Filter, interaktive Karten-Kategorien, Mobile-Nav, Back-to-Top).
-- React-Entry (App.js) auf `return null` gesetzt + index.css/App.css geleert, damit die Preview die statische Seite sauber ausliefert.
+- 100% statisch, framework-frei. **Multi-Page** (echte Unterseiten, keine SPA). Geliefert in `/app/frontend/public/` (Live-Vorschau) und als Standalone-Kopie `/app/statev-site/` + ZIP `/app/statev-los-santos.zip`.
+- 11 HTML-Seiten: `index.html` (Start), `entdecken`, `arbeiten`, `nahverkehr`, `sehenswuerdigkeiten`, `freizeit`, `unternehmen`, `events`, `guide`, `faq`, `galerie`. Jede Seite ist ein schlankes Skelett mit `<body data-page="...">` + `<main id="app">`.
+- `css/styles.css` (Dark/Glassmorphism Design-System), `js/main.js` (zentrale DATA, Icon-Sprite, Navigation & Footer werden per JS injiziert = DRY; seitenspezifischer Inhalt wird anhand von `data-page` gerendert; IntersectionObserver Scroll-Reveal, FAQ-Accordion, Event-Filter, interaktive Karte, Mobile-Nav, Back-to-Top).
+- React-Entry (App.js) auf `return null` gesetzt + index.css/App.css geleert, damit die Preview die statische Seite sauber ausliefert (nur index.html erhält ein inaktives Bundle; Unterseiten werden 100% statisch ausgeliefert).
 - Bilder lokal generiert (Hero, 8 Sehenswürdigkeiten, stilisierte Karte) in `images/`.
 
 ## Implementiert (2026-06-27)

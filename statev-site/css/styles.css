@@ -504,6 +504,17 @@ body::after { /* fine grain texture */
 .reveal[data-delay="5"] { transition-delay: .40s; }
 
 /* ==========================================================================
+   MULTI-PAGE LAYOUT-HELFER
+   ========================================================================== */
+.page-first { padding-top: calc(var(--nav-h) + clamp(40px, 7vw, 96px)); }
+.section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+
+a.tile { text-decoration: none; justify-content: flex-start; }
+.tile-go { margin-top: auto; display: inline-flex; align-items: center; gap: 8px; color: var(--amber); font-weight: 650; font-size: 0.85rem; padding-top: 4px; }
+.tile-go svg { width: 16px; height: 16px; transition: transform .3s var(--ease); }
+a.tile:hover .tile-go svg { transform: translateX(5px); }
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 1080px) {
