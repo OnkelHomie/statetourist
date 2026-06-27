@@ -1,0 +1,62 @@
+{
+  "summary": "End-to-end review of StateV admin proxy + CMS. Backend 13/14 pytest passing on preview URL; frontend admin dashboard, KPIs, Bankkonten Premium box, CMS CRUD, Logout and public events.html all verified working. One real backend bug found: /api/firma/counter returns upstream 404 ('Counter is empty') instead of treating empty-state as 200.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/firma/counter",
+        "issue": "Returns 404 with detail 'Counter is empty' when StateV upstream signals an empty counter. Spec requires 200 for inventory/machine/counter/productions/vehicles/marketoffers/buylog (kein 500/4xx). sv_get() bubbles every upstream >=400 (except premium-401) up as HTTPException, so legitimate empty-state 404s become hard errors. Should treat 'is empty' / 404 from these read endpoints as a 200 with an empty payload (e.g. {} or {items: []}).",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "GET /api/firma/marketoffers, /api/firma/inventory, etc.",
+        "issue": "Same risk as /counter: if upstream ever returns 404/'empty' the frontend tab will display an error state instead of an empty list. Recommend a generic empty-mapping in sv_get for known empty-state messages."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Admin Login (when Discord not configured)",
+        "issues": ["Login warning box ('Discord-Login ist noch nicht konfiguriert') has no data-testid; only the discord-login-btn has one. Add data-testid='login-warning' for easier QA when DISCORD_CLIENT_ID is empty."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_statev_admin.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix /api/firma/counter (and any other firma read-endpoint) so upstream 404 'is empty' becomes a 200 with empty body. Likely add a check in sv_get: if r.status_code == 404 and 'empty' in message.lower(): return {} (or [] depending on path).",
+    "Optionally add data-testid='login-warning' to the unconfigured-Discord branch in admin.js for easier automation."
+  ],
+  "critical_code_review_comments": [
+    "server.py sv_get error mapping is too strict: legitimate upstream 'empty' responses (404) are surfaced as errors. Either whitelist empty-state messages or per-endpoint catch HTTPException and convert to empty.",
+    "Cookies are set with secure=True + samesite=Lax which works behind the preview HTTPS proxy, good.",
+    "JWT secret has a default fallback ('dev_secret') but .env overrides it - acceptable for dev, must NOT be committed/used in prod.",
+    "ADMIN_DISCORD_IDS empty means any valid token is admin: documented and intentional per the request, but flag in deployment docs.",
+    "CMS routes correctly strip MongoDB _id via _strip_id; create/update/delete protected by get_current_admin; idempotent seeding works (6 events present)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_statev_admin.py (new)",
+    "/app/test_reports/iteration_1.json (new)"
+  ],
+  "success_rate": {
+    "backend": "93% (13/14)",
+    "frontend": "100% (all UI scenarios verified)"
+  },
+  "test_credentials": "Admin JWT cookie sv_admin=<TOKEN> provided in review_request (QA_ADMIN, exp 2026-...). No Discord OAuth tested by design.",
+  "seed_data_creation": "Backend auto-seeds 6 events / 5 news / 12 gallery items on startup if empty. Test created and cleaned up one TEST_CRUD_EVENT and one TEST_UI_EVENT - verified list size restored to 6.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Use preview URL https://ce9c8e4c-9176-4169-a78d-2d45326dfc08.preview.emergentagent.com. To hit admin endpoints, send Cookie: sv_admin=<TOKEN provided in original request> or use Playwright context.add_cookies with httpOnly+secure+sameSite Lax. Existing pytest suite at /app/backend/tests/test_statev_admin.py covers auth gating, all firma endpoints, buildings, CMS public/protected/CRUD. Re-run only the counter test after backend fix.",
+  "rca of the issue": {
+    "bug": "/api/firma/counter returns 404",
+    "reproduction": "curl -H 'Cookie: sv_admin=<TOKEN>' https://<preview>/api/firma/counter -> 404 {'detail':'Counter is empty'}",
+    "root_cause": "sv_get() in backend/server.py raises HTTPException for any upstream status >=400 except the premium-401 case. StateV vAPI returns 404 with message 'Counter is empty' for empty counters, which the proxy bubbles up instead of normalising to an empty-state 200.",
+    "mitigation": "In sv_get, after parsing data, treat r.status_code == 404 with message containing 'empty' (case-insensitive) as a successful empty response, e.g. return {} or {'items': []}. Alternatively wrap each firma endpoint in a try/except HTTPException catching 404 specifically and returning {}."
+  }
+}
