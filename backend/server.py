@@ -288,7 +288,7 @@ async def building_bankaccounts(building_id: str, admin: dict = Depends(get_curr
 # ======================================================================
 #  Website CMS (Events / News / Gallery) — GET public, mutations admin
 # ======================================================================
-VALID_KINDS = {"events", "news", "gallery"}
+VALID_KINDS = {"events", "news", "gallery", "sights", "places", "jobs", "companies", "freizeit"}
 
 def _strip_id(doc):
     doc = dict(doc)
@@ -370,8 +370,63 @@ DEFAULT_GALLERY = [
     {"img": "airport", "cap": "Flughafen LSIA", "ar": 1},
 ]
 
+DEFAULT_SIGHTS = [
+    {"img": "vinewood", "cat": "Wahrzeichen", "title": "Vinewood Sign", "desc": "Der berühmte Schriftzug hoch über der Stadt – das beste Fotomotiv."},
+    {"img": "pier", "cat": "Strand", "title": "Del Perro Pier", "desc": "Riesenrad, Spielhallen und Sonnenuntergänge am Meer."},
+    {"img": "observatory", "cat": "Aussicht", "title": "Galileo Observatory", "desc": "Sterne beobachten und über den Lichtern der Stadt schweben."},
+    {"img": "casino", "cat": "Entertainment", "title": "Diamond Casino", "desc": "Glanz, Glamour und das große Glück mitten in Vinewood."},
+    {"img": "mazebank", "cat": "Architektur", "title": "Maze Bank Tower", "desc": "Das höchste Gebäude der Stadt mit Aussichtsplattform."},
+    {"img": "airport", "cat": "Verkehr", "title": "Flughafen LSIA", "desc": "Das Tor zur Welt – Ankunftspunkt für alle Neuankömmlinge."},
+    {"img": "harbor", "cat": "Industrie", "title": "Hafen von Los Santos", "desc": "Wo Fracht und Geschichten aus aller Welt anlanden."},
+    {"img": "golf", "cat": "Freizeit", "title": "GWC Golfplatz", "desc": "Gepflegte Greens für eine entspannte Runde unter Palmen."},
+]
+DEFAULT_PLACES = [
+    {"cat": "krankenhaus", "icon": "cross", "title": "Pillbox Hill Medical", "desc": "Zentrales Krankenhaus mit Notaufnahme rund um die Uhr.", "loc": "Pillbox Hill", "hours": "24 Stunden geöffnet"},
+    {"cat": "polizei", "icon": "shield", "title": "LSPD Mission Row", "desc": "Hauptrevier des Los Santos Police Department.", "loc": "Mission Row", "hours": "24 Stunden besetzt"},
+    {"cat": "feuerwehr", "icon": "flame", "title": "Feuerwache Davis", "desc": "Brandbekämpfung und Rettungsdienst für den Süden.", "loc": "Davis", "hours": "24 Stunden einsatzbereit"},
+    {"cat": "rathaus", "icon": "landmark", "title": "Rathaus Los Santos", "desc": "Personalausweis, Anmeldungen und Bürgerservice.", "loc": "Vinewood Blvd.", "hours": "Mo–Fr 08:00–20:00"},
+    {"cat": "arbeitsamt", "icon": "briefcase", "title": "Arbeitsamt", "desc": "Anmeldung für alle städtischen Jobs und Berufe.", "loc": "Legion Square", "hours": "Täglich 07:00–22:00"},
+    {"cat": "bank", "icon": "coins", "title": "Fleeca Bank", "desc": "Bankkonto eröffnen, Geld abheben und Überweisungen.", "loc": "Innenstadt", "hours": "Mo–Sa 09:00–18:00"},
+    {"cat": "tankstelle", "icon": "fuel", "title": "LTD Tankstelle", "desc": "Kraftstoff, Snacks und kleine Einkäufe.", "loc": "Mehrere Standorte", "hours": "24 Stunden geöffnet"},
+    {"cat": "garage", "icon": "warehouse", "title": "Zentralgarage", "desc": "Hier holst du deine Fahrzeuge ab und stellst sie ab.", "loc": "Innenstadt & Bezirke", "hours": "Immer zugänglich"},
+    {"cat": "shop", "icon": "bag", "title": "24/7 Supermarkt", "desc": "Lebensmittel, Getränke und Alltagsbedarf.", "loc": "Stadtweit", "hours": "24 Stunden geöffnet"},
+]
+DEFAULT_JOBS = [
+    {"icon": "trash", "title": "Müllabfuhr", "desc": "Sammle Müll in der ganzen Stadt ein – ein verlässlicher Einstiegsjob.", "diff": 1, "pay": "€ Niedrig", "beginner": True},
+    {"icon": "bus", "title": "Busfahrer", "desc": "Fahre feste Routen ab und bringe Bürger ans Ziel.", "diff": 2, "pay": "€€ Mittel", "beginner": True},
+    {"icon": "tram", "title": "Straßenbahnfahrer", "desc": "Steuere die Tram entlang des Schienennetzes der Stadt.", "diff": 2, "pay": "€€ Mittel", "beginner": True},
+    {"icon": "car", "title": "Taxifahrer", "desc": "Hole Fahrgäste ab und verdiene am Trinkgeld mit.", "diff": 2, "pay": "€€ Mittel", "beginner": True},
+    {"icon": "fish", "title": "Fischer", "desc": "Fahre raus aufs Meer und verkaufe deinen Fang.", "diff": 3, "pay": "€€ Mittel", "beginner": False},
+    {"icon": "tractor", "title": "Farmer", "desc": "Bestelle Felder, ernte Pflanzen und versorge die Stadt.", "diff": 2, "pay": "€€ Mittel", "beginner": True},
+    {"icon": "axe", "title": "Holzfäller", "desc": "Fälle Bäume im Wald und liefere Holz zum Sägewerk.", "diff": 3, "pay": "€€€ Hoch", "beginner": False},
+    {"icon": "pickaxe", "title": "Bergarbeiter", "desc": "Baue Erze in der Mine ab – körperlich anspruchsvoll.", "diff": 4, "pay": "€€€ Hoch", "beginner": False},
+    {"icon": "truck", "title": "LKW Fahrer", "desc": "Transportiere Fracht über lange Strecken durch San Andreas.", "diff": 3, "pay": "€€€ Hoch", "beginner": False},
+    {"icon": "target", "title": "Jäger", "desc": "Erlege Wild in den Bergen und verkaufe Felle und Fleisch.", "diff": 4, "pay": "€€€ Hoch", "beginner": False},
+]
+DEFAULT_COMPANIES = [
+    {"icon": "utensils", "type": "Gastronomie", "title": "Bayview Restaurant", "desc": "Feine Küche mit Blick aufs Meer – ideal für besondere Anlässe."},
+    {"icon": "wrench", "type": "Werkstatt", "title": "LS Customs", "desc": "Tuning, Reparaturen und Lackierungen für jedes Fahrzeug."},
+    {"icon": "car", "type": "Autohaus", "title": "Premium Deluxe Motors", "desc": "Vom Kleinwagen bis zum Sportwagen – dein Traumauto wartet."},
+    {"icon": "fuel", "type": "Tankstelle", "title": "RON Energie", "desc": "Kraftstoff und Shop-Artikel an Standorten in der ganzen Stadt."},
+    {"icon": "bed", "type": "Hotel", "title": "Von Crastenburg Hotel", "desc": "Luxuriöse Zimmer und erstklassiger Service im Herzen der Stadt."},
+    {"icon": "music", "type": "Club", "title": "Galaxy Nightclub", "desc": "Der angesagteste Club mit den größten Events der Woche."},
+]
+DEFAULT_FREIZEIT = [
+    {"icon": "dice", "title": "Bowling", "desc": "Strikes mit Freunden im Bowlingcenter.", "long": "Im modernen Bowlingcenter triffst du dich mit Freunden zu entspannten Runden. Mehrere Bahnen, Schuhverleih und eine Bar sorgen für einen gelungenen Abend."},
+    {"icon": "dice", "title": "Casino", "desc": "Roulette, Slots und Blackjack im Diamond.", "long": "Das Diamond Casino bietet Roulette, Blackjack, Spielautomaten und ein gehobenes Ambiente. Setze dein Glück aufs Spiel – aber behalte einen kühlen Kopf."},
+    {"icon": "wine", "title": "Bars", "desc": "Gemütliche Drinks an stilvollen Theken.", "long": "Über die ganze Stadt verteilt findest du stilvolle Bars – von der ruhigen Cocktailbar bis zur lebhaften Strandbar."},
+    {"icon": "music", "title": "Clubs", "desc": "Tanzen bis in die frühen Morgenstunden.", "long": "Die Clubs von Los Santos sind das Herz des Nachtlebens: Live-DJs, Lichtshows und volle Tanzflächen bis zum Morgengrauen."},
+    {"icon": "target", "title": "Paintball", "desc": "Taktische Matches in der Paintball-Arena.", "long": "In der Paintball-Arena trittst du in taktischen Team-Matches an. Ausrüstung wird gestellt – Teamgeist bringst du mit."},
+    {"icon": "flag", "title": "Rennstrecke", "desc": "Teste deine Rundenzeiten auf dem Kurs.", "long": "Auf der offiziellen Rennstrecke verbesserst du gefahrlos deine Rundenzeiten und nimmst an Zeitrennen teil."},
+    {"icon": "film", "title": "Kino", "desc": "Aktuelle Filme auf großer Leinwand.", "long": "Das Kino zeigt wechselnde Filme auf großer Leinwand. Schnapp dir Popcorn und genieße einen entspannten Abend."},
+    {"icon": "fish", "title": "Angeln", "desc": "Ruhige Stunden am Wasser mit der Rute.", "long": "Ob am Pier, am See oder auf hoher See – Angeln ist die perfekte Entschleunigung mit lukrativem Fang."},
+    {"icon": "mountain", "title": "Wandern", "desc": "Trails durch die Berge von Chiliad.", "long": "Die Trails rund um den Mount Chiliad bieten atemberaubende Ausblicke auf ganz San Andreas."},
+]
+
 async def seed_content():
-    seeds = {"events": DEFAULT_EVENTS, "news": DEFAULT_NEWS, "gallery": DEFAULT_GALLERY}
+    seeds = {"events": DEFAULT_EVENTS, "news": DEFAULT_NEWS, "gallery": DEFAULT_GALLERY,
+             "sights": DEFAULT_SIGHTS, "places": DEFAULT_PLACES, "jobs": DEFAULT_JOBS,
+             "companies": DEFAULT_COMPANIES, "freizeit": DEFAULT_FREIZEIT}
     for kind, items in seeds.items():
         coll = db[f"content_{kind}"]
         if await coll.count_documents({}) == 0:
