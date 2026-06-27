@@ -34,6 +34,14 @@ Vollständig responsive, moderne Tourismus-/Stadtführer-Webseite für den State
 - **Getestet:** Dashboard inkl. „Veröffentlichen"-Tab, Publish-Fehlerfall (API-Secret fehlt → 503 sauber), Guide macht genau 1 vAPI-Aufruf + Fallback, Unternehmen-Seite rendert.
 - **Offen (User):** `STATEV_API_SECRET` (für Push), Discord-Creds + Redirect-URI, `ADMIN_DISCORD_IDS`.
 
+## Bilder & CMS für ALLE Sektionen + Slot-Warnung (2026-06-27)
+- **CMS erweitert auf 8 Sektionen:** Neben Events/News/Galerie sind jetzt auch Sehenswürdigkeiten (sights), Stadt entdecken (places), Arbeiten (jobs), Unternehmen (companies) und Freizeit (freizeit) vollständig über das Admin-CMS verwaltbar – inkl. Bild-URL-Feld (pic.statev.de oder lokaler Bildname). Backend: `VALID_KINDS`, CRUD `/api/content/{kind}`, Seeding.
+- **Veröffentlichen (`POST /api/publish`):** `_build_bundle()` serialisiert nun alle 8 Sektionen + Firmen-Snapshot zu minified JSON, chunkt über Page-Option-Slots (Slot 1 Manifest, 2..N Daten). Nicht mehr benötigte Slots werden beim Schrumpfen geleert.
+- **Slot-Warnung (P1):** `POST /api/publish?dry=true` (Dry-Run) liefert `bytes`, `slots`, `fits`, `counts` ohne zu schreiben. Admin „Veröffentlichen"-Ansicht zeigt Auslastungs-Balken „n / 10 Slots", „passt"/„zu groß" und warnt vor Überschreitung (data-testids: publish-estimate, publish-fits, publish-warning). Echtes Publish blockt bei >10 Slots (413).
+- **Guide-Rendering:** `cardMedia()` erzeugt Bild-Header (`.card-media`); job-/company-/freizeit-/place-/sight-Karten zeigen Bilder einheitlich. `loadFromVapi()` wendet alle 8 Sektionen an. Guide rendert sofort Standarddaten und re-rendert flackerfrei nach asynchronem vAPI-Laden (firstRender-Flag, reveals beim Re-Render sofort sichtbar). Geladen auf start/events/galerie/unternehmen/sehenswuerdigkeiten/arbeiten/entdecken/freizeit.
+- **Getestet (iteration_2):** 27/27 Backend-pytest grün; Admin 8 CMS-Tabs + Bild-Formular + Publish-Estimate; 5 Guide-Seiten rendern Seed-Inhalte; Bild-Header (Bayview/casino) erscheint. Keine Defekte.
+- **Pakete:** `statev-los-santos.zip` (Guide via statev-site) + `statev-admin.zip` (admin-site) neu gepackt; frontend/public-Kopien synchron.
+
 ## Backlog / Next
 - P0: Discord-Credentials hinterlegen, damit der Admin-Login live funktioniert.
 - P1: Reales StateV-Verifizierungssiegel-Bild einsetzen (Platzhalter vorhanden).

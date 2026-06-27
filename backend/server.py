@@ -501,8 +501,8 @@ async def publish(dry: bool = False, admin: dict = Depends(get_current_admin)):
         try:
             await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID,
                                               "option": n, "title": "", "data": ""})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Konnte Slot {n} nicht leeren: {e}")
     return {"ok": True, "slots": needed, "bytes": len(raw),
             "counts": counts, "firma": firma.get("name") if firma else None}
 
