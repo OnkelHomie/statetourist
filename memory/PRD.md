@@ -26,6 +26,14 @@ Vollständig responsive, moderne Tourismus-/Stadtführer-Webseite für den State
 - **Getestet:** Backend 13/14→14/14 (counter-Fix), Admin-UI 100% (Dashboard, KPIs, Premium-Box, CMS-CRUD, Logout, Guide liest CMS). Discord-OAuth-Flow nicht automatisiert getestet (echtes Login nötig).
 - **Offen (benötigt User):** DISCORD_CLIENT_ID/SECRET + Redirect-URI registrieren, ADMIN_DISCORD_IDS setzen.
 
+## Content-Push via StateV Page Options + Separates Admin (2026-06-27)
+- **Erkenntnis:** vAPI hat keinen generischen Content-Endpoint, aber **Page Options** (10 Slots/Firma, Premium 20; je title≤64, data≤2400) sind als „Speicher für externe Webseiten" gedacht. Schreiben: `POST /factory/options` (braucht **API-Secret**). Lesen: `GET /factory/options/{firmenId}/{option}` (nur Bearer). CORS offen (`*`).
+- **Push-Mechanismus:** Admin „Veröffentlichen" (`POST /api/publish`) serialisiert Events/News/Galerie + Firmen-Snapshot zu minified JSON, chunkt es (2300 Zeichen) über Slot 1 (Manifest `{c,len}`) + Slots 2..N und schreibt via API-Secret.
+- **Guide liest live:** `js/config.js` (lokal, nur Lese-Key) → `main.js loadFromVapi()` liest Manifest + Chunks aus der vAPI (einzige erlaubte API ingame), rekonstruiert JSON, überschreibt Inhalte; Fallback auf Standarddaten. Firma-Live-Status-Karte auf der Unternehmen-Seite.
+- **Admin SEPARAT & deploybar:** eigenständiges Paket `/app/admin-site/` + `statev-admin.zip` (admin.html, css, js/admin.js, js/admin-config.js mit `ADMIN_API_BASE`, README). Cookie auf `SameSite=None; Secure` für Cross-Origin. Backend: `ADMIN_BASE_URL` (Login-Redirect-Ziel) konfigurierbar.
+- **Getestet:** Dashboard inkl. „Veröffentlichen"-Tab, Publish-Fehlerfall (API-Secret fehlt → 503 sauber), Guide macht genau 1 vAPI-Aufruf + Fallback, Unternehmen-Seite rendert.
+- **Offen (User):** `STATEV_API_SECRET` (für Push), Discord-Creds + Redirect-URI, `ADMIN_DISCORD_IDS`.
+
 ## Backlog / Next
 - P0: Discord-Credentials hinterlegen, damit der Admin-Login live funktioniert.
 - P1: Reales StateV-Verifizierungssiegel-Bild einsetzen (Platzhalter vorhanden).

@@ -514,6 +514,21 @@ a.tile { text-decoration: none; justify-content: flex-start; }
 .tile-go svg { width: 16px; height: 16px; transition: transform .3s var(--ease); }
 a.tile:hover .tile-go svg { transform: translateX(5px); }
 
+/* Firma Live-Status (Unternehmen) */
+.firma-status { display: flex; align-items: center; gap: 22px; padding: 24px 26px; border-radius: var(--radius-lg); margin-bottom: 26px; flex-wrap: wrap; }
+.firma-status .fs-badge { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.02em; }
+.firma-status .fs-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.firma-status .fs-badge.on { color: var(--teal); background: rgba(54,214,198,.12); border: 1px solid rgba(54,214,198,.3); }
+.firma-status .fs-badge.on::before { background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+.firma-status .fs-badge.off { color: #ff8b7e; background: rgba(239,111,94,.12); border: 1px solid rgba(239,111,94,.3); }
+.firma-status .fs-badge.off::before { background: #ff8b7e; }
+.firma-status .fs-main { min-width: 0; }
+.firma-status .fs-label { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--amber); }
+.firma-status .fs-main h3 { font-size: 1.4rem; letter-spacing: -0.01em; margin: 4px 0 8px; }
+.firma-status .fs-meta { display: flex; gap: 18px; flex-wrap: wrap; color: var(--text-soft); font-size: 0.88rem; }
+.firma-status .fs-meta span { display: inline-flex; align-items: center; gap: 7px; }
+.firma-status .fs-meta svg { color: var(--teal); }
+
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */

@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 import uuid
+import json
 import httpx
 import jwt
 
@@ -25,14 +26,17 @@ db = client[os.environ['DB_NAME']]
 # --- Config ---
 STATEV_API_BASE = os.environ.get('STATEV_API_BASE', '').rstrip('/')
 STATEV_API_KEY = os.environ.get('STATEV_API_KEY', '')
+STATEV_API_SECRET = os.environ.get('STATEV_API_SECRET', '')
 STATEV_FIRMA_ID = os.environ.get('STATEV_FIRMA_ID', '')
 JWT_SECRET = os.environ.get('JWT_SECRET', 'dev_secret')
 PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
+ADMIN_BASE_URL = (os.environ.get('ADMIN_BASE_URL', '') or PUBLIC_BASE_URL).rstrip('/')
 DISCORD_CLIENT_ID = os.environ.get('DISCORD_CLIENT_ID', '')
 DISCORD_CLIENT_SECRET = os.environ.get('DISCORD_CLIENT_SECRET', '')
 ADMIN_DISCORD_IDS = [s.strip() for s in os.environ.get('ADMIN_DISCORD_IDS', '').split(',') if s.strip()]
 DISCORD_REDIRECT_URI = f"{PUBLIC_BASE_URL}/api/auth/discord/callback"
 COOKIE_NAME = "sv_admin"
+PUBLIC_DIR = Path("/app/frontend/public")
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -131,7 +135,7 @@ async def auth_login():
 
 @api_router.get("/auth/discord/callback")
 async def auth_callback(code: Optional[str] = None, error: Optional[str] = None):
-    admin_url = f"{PUBLIC_BASE_URL}/admin.html"
+    admin_url = f"{ADMIN_BASE_URL}/admin.html"
     if error or not code:
         return RedirectResponse(url=f"{admin_url}?error=denied")
     token_data = {
@@ -156,7 +160,7 @@ async def auth_callback(code: Optional[str] = None, error: Optional[str] = None)
         return RedirectResponse(url=f"{admin_url}?error=forbidden")
     token = make_token(user)
     resp = RedirectResponse(url=admin_url)
-    resp.set_cookie(COOKIE_NAME, token, httponly=True, secure=True, samesite="lax", max_age=7 * 24 * 3600, path="/")
+    resp.set_cookie(COOKIE_NAME, token, httponly=True, secure=True, samesite="none", max_age=7 * 24 * 3600, path="/")
     return resp
 
 @api_router.get("/auth/me")
@@ -229,8 +233,14 @@ async def firma_options_get(option: str, admin: dict = Depends(get_current_admin
 
 @api_router.post("/firma/options")
 async def firma_options_set(payload: dict = Body(...), admin: dict = Depends(get_current_admin)):
-    body = dict(payload)
-    body.setdefault("firmenId", STATEV_FIRMA_ID)
+    if not STATEV_API_SECRET:
+        raise HTTPException(status_code=503, detail="API-Secret fehlt. Bitte STATEV_API_SECRET im Backend hinterlegen.")
+    try:
+        opt = int(payload.get("option"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="option muss eine Ganzzahl (1–10) sein.")
+    body = {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID, "option": opt,
+            "title": str(payload.get("title", ""))[:64], "data": str(payload.get("data", ""))[:2400]}
     return await sv_post("factory/options", body)
 
 # ======================================================================
@@ -360,6 +370,59 @@ async def seed_content():
 @api_router.get("/")
 async def root():
     return {"message": "Los Santos Stadtführer API"}
+
+# ======================================================================
+#  Veröffentlichen: Inhalte via StateV Page Options pushen (gechunkt)
+#  Schreiben benötigt API-Secret. Der Guide liest die Slots direkt (nur Bearer).
+# ======================================================================
+def _trim(items, keys):
+    return [{k: it[k] for k in keys if k in it and it[k] != ""} for it in items]
+
+@api_router.post("/publish")
+async def publish(admin: dict = Depends(get_current_admin)):
+    if not STATEV_API_SECRET:
+        raise HTTPException(status_code=503, detail="API-Secret fehlt. Bitte STATEV_API_SECRET im Backend hinterlegen (API-Key-Übersicht).")
+    ev = _trim([_strip_id(d) for d in await db.content_events.find({}).sort("order", 1).to_list(500)], ("cat", "day", "mon", "title", "text", "time", "place"))
+    nw = _trim([_strip_id(d) for d in await db.content_news.find({}).sort("order", 1).to_list(500)], ("tag", "tagLabel", "title", "text", "meta", "feature"))
+    gl = _trim([_strip_id(d) for d in await db.content_gallery.find({}).sort("order", 1).to_list(500)], ("img", "grad", "cap", "ar"))
+    firma = None
+    try:
+        lst = await sv_get("factory/list/")
+        if isinstance(lst, list) and lst:
+            firma = next((f for f in lst if f.get("id") == STATEV_FIRMA_ID), lst[0])
+        if firma:
+            firma = {k: firma.get(k) for k in ("id", "name", "isOpen", "address", "type") if k in firma}
+    except Exception:
+        firma = None
+    bundle = {"events": ev, "news": nw, "gallery": gl, "firma": firma}
+    raw = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"))
+    CH = 2300
+    chunks = [raw[i:i + CH] for i in range(0, len(raw), CH)]
+    if len(chunks) + 1 > 10:
+        raise HTTPException(status_code=413, detail=f"Inhalt zu groß ({len(raw)} Zeichen, {len(chunks)} Blöcke). Bitte Inhalte kürzen oder VAPI Premium nutzen (20 Slots).")
+    await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID, "option": 1,
+                                      "title": "site", "data": json.dumps({"c": len(chunks), "len": len(raw)})})
+    for i, ch in enumerate(chunks):
+        await sv_post("factory/options", {"apiSecret": STATEV_API_SECRET, "factoryId": STATEV_FIRMA_ID,
+                                          "option": 2 + i, "title": f"site:{i}", "data": ch})
+    return {"ok": True, "slots": len(chunks) + 1, "bytes": len(raw),
+            "counts": {"events": len(ev), "news": len(nw), "gallery": len(gl)},
+            "firma": firma.get("name") if firma else None}
+
+@api_router.get("/publish/status")
+async def publish_status(admin: dict = Depends(get_current_admin)):
+    try:
+        slot = await sv_get(f"factory/options/{STATEV_FIRMA_ID}/1")
+    except Exception:
+        return {"published": False}
+    data = slot.get("data") if isinstance(slot, dict) else None
+    if not data:
+        return {"published": False}
+    try:
+        meta = json.loads(data)
+    except Exception:
+        meta = {}
+    return {"published": True, "chunks": meta.get("c"), "len": meta.get("len"), "lastUpdated": slot.get("lastUpdated")}
 
 app.include_router(api_router)
 app.add_middleware(

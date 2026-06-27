@@ -66,6 +66,56 @@
   }
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var ARR = icon("arrow-right", 'width="18" height="18"');
+  var PUBLISHED_FIRMA = null;
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---------- Inhalte aus der StateV vAPI (Page Options) lesen ----------
+     Liest die vom Admin veröffentlichten, gechunkten Inhalte. Bei jedem
+     Fehler (kein Key, offline, leer) wird auf die Standardinhalte zurückgegriffen. */
+  async function loadFromVapi() {
+    var cfg = window.STATEV_CONFIG;
+    if (!cfg || !cfg.apiKey || !cfg.base || !cfg.firmaId) return;
+    var base = cfg.base.replace(/\/$/, "");
+    var H = { "Authorization": "Bearer " + cfg.apiKey };
+    var url = function (slot) { return base + "/factory/options/" + cfg.firmaId + "/" + slot; };
+    try {
+      var ctrl = new AbortController();
+      var to = setTimeout(function () { ctrl.abort(); }, 7000);
+      var mRes = await fetch(url(1), { headers: H, signal: ctrl.signal });
+      if (!mRes.ok) { clearTimeout(to); return; }
+      var meta = await mRes.json();
+      if (!meta || !meta.data) { clearTimeout(to); return; }
+      var info = JSON.parse(meta.data);
+      var n = info.c || 0;
+      if (!n) { clearTimeout(to); return; }
+      var reqs = [];
+      for (var i = 0; i < n; i++) {
+        reqs.push(fetch(url(2 + i), { headers: H, signal: ctrl.signal }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }));
+      }
+      var parts = await Promise.all(reqs);
+      clearTimeout(to);
+      var raw = parts.map(function (p) { return p && p.data ? p.data : ""; }).join("");
+      var bundle = JSON.parse(raw);
+      if (bundle.events && bundle.events.length) DATA.events = bundle.events;
+      if (bundle.news && bundle.news.length) DATA.news = bundle.news;
+      if (bundle.gallery && bundle.gallery.length) DATA.gallery = bundle.gallery;
+      if (bundle.firma) PUBLISHED_FIRMA = bundle.firma;
+    } catch (e) { /* Fallback auf eingebaute Standardinhalte */ }
+  }
+
+  function firmaStatusHTML() {
+    var f = PUBLISHED_FIRMA;
+    if (!f) return "";
+    var open = !!f.isOpen;
+    return '<div class="firma-status glass reveal">' +
+      '<span class="fs-badge ' + (open ? "on" : "off") + '">' + (open ? "Geöffnet" : "Geschlossen") + "</span>" +
+      '<div class="fs-main"><span class="fs-label">Live-Status · StateV vAPI</span><h3>' + esc(f.name || "Unsere Firma") + "</h3>" +
+      '<div class="fs-meta">' +
+        (f.address ? "<span>" + icon("pin", 'width="15" height="15"') + esc(f.address) + "</span>" : "") +
+        (f.type ? "<span>" + icon("briefcase", 'width="15" height="15"') + esc(f.type) + "</span>" : "") +
+      "</div></div></div>";
+  }
 
   /* ---------- Navigation / Routing ---------- */
   var NAV = [
@@ -415,7 +465,7 @@
       return section(pageHead("Freizeit", 'Spaß für <span class="grad-text">jeden Tag</span>', "Langweilig wird es nie: Bowling, Casino, Clubs, Paintball und vieles mehr warten auf dich.") + '<div class="card-grid grid-3">' + freizeitHTML() + '</div>', true);
     },
     unternehmen: function () {
-      return section(pageHead("Unternehmen", 'Die <span class="grad-text">Wirtschaft</span> der Stadt', "Restaurants, Werkstätten, Autohäuser und mehr – betrieben von der Community für die Community.") + '<div class="card-grid grid-2">' + companiesHTML() + '</div>', true);
+      return section(pageHead("Unternehmen", 'Die <span class="grad-text">Wirtschaft</span> der Stadt', "Restaurants, Werkstätten, Autohäuser und mehr – betrieben von der Community für die Community.") + firmaStatusHTML() + '<div class="card-grid grid-2">' + companiesHTML() + '</div>', true);
     },
     events: function () {
       var cats = ["Alle"]; DATA.events.forEach(function (e) { if (cats.indexOf(e.cat) < 0) cats.push(e.cat); });
@@ -504,8 +554,13 @@
   /* ======================================================================
      INIT
      ====================================================================== */
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", async function () {
     var page = document.body.getAttribute("data-page") || "start";
+
+    // Vom Admin veröffentlichte Inhalte aus der StateV vAPI laden (mit Fallback)
+    if (page === "start" || page === "events" || page === "galerie" || page === "unternehmen") {
+      await loadFromVapi();
+    }
 
     // Sprite + Navigation + Inhalt + Footer einbauen
     document.body.insertAdjacentHTML("afterbegin", SPRITE + buildNav(page));
