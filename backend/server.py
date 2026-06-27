@@ -288,7 +288,7 @@ async def building_bankaccounts(building_id: str, admin: dict = Depends(get_curr
 # ======================================================================
 #  Website CMS (Events / News / Gallery) — GET public, mutations admin
 # ======================================================================
-VALID_KINDS = {"events", "news", "gallery", "sights", "places", "jobs", "companies", "freizeit"}
+VALID_KINDS = {"events", "news", "gallery", "sights", "jobs", "companies", "freizeit"}
 
 def _strip_id(doc):
     doc = dict(doc)
@@ -425,7 +425,7 @@ DEFAULT_FREIZEIT = [
 
 async def seed_content():
     seeds = {"events": DEFAULT_EVENTS, "news": DEFAULT_NEWS, "gallery": DEFAULT_GALLERY,
-             "sights": DEFAULT_SIGHTS, "places": DEFAULT_PLACES, "jobs": DEFAULT_JOBS,
+             "sights": DEFAULT_SIGHTS, "jobs": DEFAULT_JOBS,
              "companies": DEFAULT_COMPANIES, "freizeit": DEFAULT_FREIZEIT}
     for kind, items in seeds.items():
         coll = db[f"content_{kind}"]
@@ -457,7 +457,6 @@ async def _build_bundle():
     nw = _trim([_strip_id(d) for d in await db.content_news.find({}).sort("order", 1).to_list(500)], ("tag", "tagLabel", "title", "text", "meta", "feature"))
     gl = _trim([_strip_id(d) for d in await db.content_gallery.find({}).sort("order", 1).to_list(500)], ("img", "grad", "cap", "ar"))
     si = _trim([_strip_id(d) for d in await db.content_sights.find({}).sort("order", 1).to_list(500)], ("img", "cat", "title", "desc"))
-    pl = _trim([_strip_id(d) for d in await db.content_places.find({}).sort("order", 1).to_list(500)], ("cat", "icon", "title", "desc", "loc", "hours", "img", "x", "y"))
     jb = _trim([_strip_id(d) for d in await db.content_jobs.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "diff", "pay", "beginner", "img"))
     co = _trim([_strip_id(d) for d in await db.content_companies.find({}).sort("order", 1).to_list(500)], ("icon", "type", "title", "desc", "img"))
     fz = _trim([_strip_id(d) for d in await db.content_freizeit.find({}).sort("order", 1).to_list(500)], ("icon", "title", "desc", "long", "img"))
@@ -470,10 +469,10 @@ async def _build_bundle():
             firma = {k: firma.get(k) for k in ("id", "name", "isOpen", "address", "type") if k in firma}
     except Exception:
         firma = None
-    bundle = {"events": ev, "news": nw, "gallery": gl, "sights": si, "places": pl,
+    bundle = {"events": ev, "news": nw, "gallery": gl, "sights": si,
               "jobs": jb, "companies": co, "freizeit": fz, "firma": firma}
     counts = {"events": len(ev), "news": len(nw), "gallery": len(gl), "sights": len(si),
-              "places": len(pl), "jobs": len(jb), "companies": len(co), "freizeit": len(fz)}
+              "jobs": len(jb), "companies": len(co), "freizeit": len(fz)}
     return bundle, counts, firma
 
 @api_router.post("/publish")

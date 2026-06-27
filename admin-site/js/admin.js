@@ -240,7 +240,7 @@
   async function renderPublish(c) {
     c.innerHTML =
       '<div class="panel glass" style="max-width:680px"><div class="panel-head"><h3>Inhalte veröffentlichen</h3></div>' +
-        '<p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Überträgt alle Webseiten-Inhalte (Events, News, Galerie, Sehenswürdigkeiten, Stadt entdecken, Arbeiten, Unternehmen, Freizeit) inkl. Bilder sowie den Firmen-Status in die StateV <b>Page Options</b> deiner Firma. Der öffentliche Guide liest diese Daten direkt aus der vAPI – StateV-konform, ohne eigenes Backend.</p>' +
+        '<p style="color:var(--text-soft);font-size:.92rem;margin-bottom:18px">Überträgt alle Webseiten-Inhalte (Events, News, Galerie, Sehenswürdigkeiten, Arbeiten, Unternehmen, Freizeit) inkl. Bilder sowie den Firmen-Status in die StateV <b>Page Options</b> deiner Firma. Der öffentliche Guide liest diese Daten direkt aus der vAPI – StateV-konform, ohne eigenes Backend.</p>' +
         '<div id="pubStatus" style="margin-bottom:14px"></div>' +
         '<div id="pubEstimate" style="margin-bottom:18px"></div>' +
         '<button class="btn-sm primary" id="pubBtn" data-testid="publish-btn">' + icon("upload", 'width="15" height="15" style="display:inline;vertical-align:-2px;margin-right:6px"') + 'Jetzt veröffentlichen</button>' +
@@ -268,7 +268,7 @@
       var barColor = fits ? (pct > 80 ? "var(--amber)" : "var(--teal)") : "var(--danger,#ef6f5e)";
       var cnt = d.counts || {};
       var cntStr = "Events " + (cnt.events || 0) + " · News " + (cnt.news || 0) + " · Galerie " + (cnt.gallery || 0) +
-        " · Sehensw. " + (cnt.sights || 0) + " · Orte " + (cnt.places || 0) + " · Jobs " + (cnt.jobs || 0) +
+        " · Sehensw. " + (cnt.sights || 0) + " · Jobs " + (cnt.jobs || 0) +
         " · Unternehmen " + (cnt.companies || 0) + " · Freizeit " + (cnt.freizeit || 0);
       est.innerHTML =
         '<div class="panel" style="padding:16px;border:1px solid var(--border);border-radius:14px">' +
@@ -293,7 +293,7 @@
         toast("Inhalte veröffentlicht.");
         var cn = res.data.counts || {};
         out.innerHTML = '<div class="premium-box" style="border-color:rgba(54,214,198,.4);background:rgba(54,214,198,.05)"><div class="pb-ic" style="background:rgba(54,214,198,.12)">' + icon("upload", 'width="26" height="26"') + '</div>' +
-          '<h4>Erfolgreich veröffentlicht</h4><p>' + (res.data.bytes || 0) + ' Zeichen in ' + (res.data.slots || 0) + ' Slot(s) · Events ' + (cn.events || 0) + ', News ' + (cn.news || 0) + ', Galerie ' + (cn.gallery || 0) + ', Sehensw. ' + (cn.sights || 0) + ', Orte ' + (cn.places || 0) + ', Jobs ' + (cn.jobs || 0) + ', Unternehmen ' + (cn.companies || 0) + ', Freizeit ' + (cn.freizeit || 0) + '</p></div>';
+          '<h4>Erfolgreich veröffentlicht</h4><p>' + (res.data.bytes || 0) + ' Zeichen in ' + (res.data.slots || 0) + ' Slot(s) · Events ' + (cn.events || 0) + ', News ' + (cn.news || 0) + ', Galerie ' + (cn.gallery || 0) + ', Sehensw. ' + (cn.sights || 0) + ', Jobs ' + (cn.jobs || 0) + ', Unternehmen ' + (cn.companies || 0) + ', Freizeit ' + (cn.freizeit || 0) + '</p></div>';
         renderPublish(c);
       } else {
         out.innerHTML = errState(res.data && res.data.detail);
@@ -391,17 +391,6 @@
       { k: "img", l: "Bild-URL (pic.statev.de) ODER lokaler Dateiname ohne Endung" },
       { k: "desc", l: "Beschreibung", area: true }
     ],
-    places: [
-      { k: "title", l: "Titel" },
-      { k: "cat", l: "Kategorie", select: ["krankenhaus", "polizei", "feuerwehr", "rathaus", "arbeitsamt", "bank", "tankstelle", "garage", "shop"] },
-      { k: "icon", l: "Symbol", select: ["cross", "shield", "flame", "landmark", "briefcase", "coins", "fuel", "warehouse", "bag"] },
-      { k: "loc", l: "Standort (z. B. Pillbox Hill)" },
-      { k: "hours", l: "Öffnungszeiten (z. B. 24 Stunden geöffnet)" },
-      { k: "x", l: "Karten-Position X (%)" },
-      { k: "y", l: "Karten-Position Y (%)" },
-      { k: "img", l: "Bild-URL (pic.statev.de, optional)" },
-      { k: "desc", l: "Beschreibung", area: true }
-    ],
     jobs: [
       { k: "title", l: "Titel" },
       { k: "icon", l: "Symbol", select: ["trash", "bus", "tram", "car", "fish", "tractor", "axe", "pickaxe", "truck", "target"] },
@@ -428,7 +417,7 @@
 
   function renderCms(c) {
     var tabs = [["events", "Events", "calendar"], ["news", "News", "newspaper"], ["gallery", "Galerie", "image"],
-      ["sights", "Sehenswürdigkeiten", "camera"], ["places", "Stadt entdecken", "pin"],
+      ["sights", "Sehenswürdigkeiten", "camera"],
       ["jobs", "Arbeiten", "briefcase"], ["companies", "Unternehmen", "store"], ["freizeit", "Freizeit", "dice"]];
     c.innerHTML =
       '<div class="cms-tabs">' + tabs.map(function (t) {
@@ -445,7 +434,7 @@
     renderCmsForm(null);
   }
 
-  var PREVIEW_PAGES = { events: "events", news: "index", gallery: "galerie", sights: "sehenswuerdigkeiten", places: "entdecken", jobs: "arbeiten", companies: "unternehmen", freizeit: "freizeit" };
+  var PREVIEW_PAGES = { events: "events", news: "index", gallery: "galerie", sights: "sehenswuerdigkeiten", jobs: "arbeiten", companies: "unternehmen", freizeit: "freizeit" };
 
   function openPreview(kind) {
     var pageName = PREVIEW_PAGES[kind] || "index";
@@ -462,29 +451,6 @@
     function onKey(e) { if (e.key === "Escape") close(); }
     back.addEventListener("click", function (e) { if (e.target === back || e.target.closest("#pvClose")) close(); });
     document.addEventListener("keydown", onKey);
-  }
-
-  function initMapPicker(form, item) {
-    var pick = form.querySelector("#mapPick");
-    var marker = form.querySelector("#mpMarker");
-    var hint = form.querySelector("#mpHint");
-    var xInput = form.querySelector('[data-f="x"]');
-    var yInput = form.querySelector('[data-f="y"]');
-    if (!pick) return;
-    function place(x, y) {
-      marker.style.display = "block";
-      marker.style.left = x + "%";
-      marker.style.top = y + "%";
-      hint.textContent = "Position: X " + x + "% · Y " + y + "% (zum Ändern erneut klicken)";
-    }
-    if (item && item.x !== undefined && item.x !== "" && item.y !== undefined && item.y !== "") place(item.x, item.y);
-    pick.addEventListener("click", function (e) {
-      var r = pick.getBoundingClientRect();
-      var x = Math.max(0, Math.min(100, Math.round(((e.clientX - r.left) / r.width) * 1000) / 10));
-      var y = Math.max(0, Math.min(100, Math.round(((e.clientY - r.top) / r.height) * 1000) / 10));
-      xInput.value = x; yInput.value = y;
-      place(x, y);
-    });
   }
 
   async function loadCmsList() {
@@ -525,12 +491,6 @@
     var editing = !!item;
     var fields = FIELDS[cmsKind];
     var form = document.getElementById("cmsForm");
-    var mapPicker = cmsKind === "places"
-      ? '<div class="field"><label>Marker auf der Karte setzen – klicke die Position an</label>' +
-        '<div class="map-pick" id="mapPick" data-testid="map-pick"><img src="images/citymap.png" alt="Karte" draggable="false" />' +
-        '<span class="mp-marker" id="mpMarker" style="display:none"></span></div>' +
-        '<div class="mp-hint" id="mpHint">Noch keine Position gesetzt.</div></div>'
-      : "";
     form.innerHTML =
       '<div class="panel-head"><h3>' + (editing ? "Eintrag bearbeiten" : "Neuen Eintrag anlegen") + "</h3>" +
       (editing ? '<button class="btn-sm ghost" id="cmsCancel">Abbrechen</button>' : "") + "</div>" +
@@ -540,10 +500,9 @@
         if (f.select) return '<div class="field"><label>' + f.l + '</label><select data-f="' + f.k + '">' + f.select.map(function (o) { return '<option value="' + o + '"' + (v === o ? " selected" : "") + ">" + o + "</option>"; }).join("") + "</select></div>";
         if (f.area) return '<div class="field"><label>' + f.l + '</label><textarea data-f="' + f.k + '">' + escapeHtml(String(v)) + "</textarea></div>";
         return '<div class="field"><label>' + f.l + '</label><input data-f="' + f.k + '" value="' + escapeHtml(String(v)) + '" /></div>';
-      }).join("") + mapPicker +
+      }).join("") +
       '<div class="form-actions"><button class="btn-sm primary" id="cmsSave" data-testid="cms-save">' + (editing ? "Aktualisieren" : "Anlegen") + "</button></div>";
 
-    if (cmsKind === "places") initMapPicker(form, item);
     if (editing) document.getElementById("cmsCancel").addEventListener("click", function () { renderCmsForm(null); });
     document.getElementById("cmsSave").addEventListener("click", async function () {
       var payload = {};

@@ -130,7 +130,6 @@
     if (bundle.news && bundle.news.length) DATA.news = bundle.news;
     if (bundle.gallery && bundle.gallery.length) DATA.gallery = bundle.gallery;
     if (bundle.sights && bundle.sights.length) DATA.sights = bundle.sights;
-    if (bundle.places && bundle.places.length) DATA.places = bundle.places;
     if (bundle.jobs && bundle.jobs.length) DATA.jobs = bundle.jobs;
     if (bundle.companies && bundle.companies.length) DATA.companies = bundle.companies;
     if (bundle.freizeit && bundle.freizeit.length) DATA.freizeit = bundle.freizeit;
@@ -165,7 +164,6 @@
   /* ---------- Navigation / Routing ---------- */
   var NAV = [
     { p: "start", href: "index.html", label: "Startseite" },
-    { p: "entdecken", href: "entdecken.html", label: "Stadt entdecken" },
     { p: "arbeiten", href: "arbeiten.html", label: "Arbeiten" },
     { p: "nahverkehr", href: "nahverkehr.html", label: "Nahverkehr" },
     { p: "sehenswuerdigkeiten", href: "sehenswuerdigkeiten.html", label: "Sehenswürdigkeiten" },
@@ -185,7 +183,7 @@
     return '<nav class="nav" id="nav" data-testid="main-nav"><div class="container">' +
       brandHTML +
       '<ul class="nav-links" id="navLinks">' + links + '</ul>' +
-      '<a href="entdecken.html" class="btn btn--primary nav-cta" data-testid="nav-cta">Stadt entdecken ' + ARR + '</a>' +
+      '<a href="events.html" class="btn btn--primary nav-cta" data-testid="nav-cta">Events ' + ARR + '</a>' +
       '<button class="nav-toggle" id="navToggle" aria-label="Menü öffnen" data-testid="nav-toggle"><span></span><span></span><span></span></button>' +
       '</div></nav>';
   }
@@ -237,28 +235,6 @@
       { cat: "Sport", day: "18", mon: "Jun", title: "Boxevent", text: "Die besten Kämpfer der Stadt treten im Ring gegeneinander an.", time: "20:00 Uhr", place: "Vespucci Arena" },
       { cat: "Markt", day: "20", mon: "Jun", title: "Markttag", text: "Regionale Produkte, Handgemachtes und Schnäppchen auf dem großen Wochenmarkt.", time: "10:00 Uhr", place: "Legion Square" },
       { cat: "Nightlife", day: "21", mon: "Jun", title: "Casino Gala-Nacht", text: "Eleganter Abend mit Dresscode, Roulette und Live-Musik.", time: "21:00 Uhr", place: "Diamond Casino" }
-    ],
-    categories: [
-      { id: "krankenhaus", label: "Krankenhaus", icon: "cross", x: 38, y: 40 },
-      { id: "polizei", label: "Polizeistation", icon: "shield", x: 55, y: 30 },
-      { id: "feuerwehr", label: "Feuerwehr", icon: "flame", x: 62, y: 55 },
-      { id: "rathaus", label: "Rathaus", icon: "landmark", x: 47, y: 52 },
-      { id: "arbeitsamt", label: "Arbeitsamt", icon: "briefcase", x: 30, y: 62 },
-      { id: "bank", label: "Bank", icon: "coins", x: 50, y: 42 },
-      { id: "tankstelle", label: "Tankstellen", icon: "fuel", x: 70, y: 38 },
-      { id: "garage", label: "Garagen", icon: "warehouse", x: 25, y: 45 },
-      { id: "shop", label: "Shops", icon: "bag", x: 60, y: 68 }
-    ],
-    places: [
-      { cat: "krankenhaus", icon: "cross", title: "Pillbox Hill Medical", desc: "Zentrales Krankenhaus mit Notaufnahme rund um die Uhr.", loc: "Pillbox Hill", hours: "24 Stunden geöffnet" },
-      { cat: "polizei", icon: "shield", title: "LSPD Mission Row", desc: "Hauptrevier des Los Santos Police Department.", loc: "Mission Row", hours: "24 Stunden besetzt" },
-      { cat: "feuerwehr", icon: "flame", title: "Feuerwache Davis", desc: "Brandbekämpfung und Rettungsdienst für den Süden.", loc: "Davis", hours: "24 Stunden einsatzbereit" },
-      { cat: "rathaus", icon: "landmark", title: "Rathaus Los Santos", desc: "Personalausweis, Anmeldungen und Bürgerservice.", loc: "Vinewood Blvd.", hours: "Mo–Fr 08:00–20:00" },
-      { cat: "arbeitsamt", icon: "briefcase", title: "Arbeitsamt", desc: "Anmeldung für alle städtischen Jobs und Berufe.", loc: "Legion Square", hours: "Täglich 07:00–22:00" },
-      { cat: "bank", icon: "coins", title: "Fleeca Bank", desc: "Bankkonto eröffnen, Geld abheben und Überweisungen.", loc: "Innenstadt", hours: "Mo–Sa 09:00–18:00" },
-      { cat: "tankstelle", icon: "fuel", title: "LTD Tankstelle", desc: "Kraftstoff, Snacks und kleine Einkäufe.", loc: "Mehrere Standorte", hours: "24 Stunden geöffnet" },
-      { cat: "garage", icon: "warehouse", title: "Zentralgarage", desc: "Hier holst du deine Fahrzeuge ab und stellst sie ab.", loc: "Innenstadt & Bezirke", hours: "Immer zugänglich" },
-      { cat: "shop", icon: "bag", title: "24/7 Supermarkt", desc: "Lebensmittel, Getränke und Alltagsbedarf.", loc: "Stadtweit", hours: "24 Stunden geöffnet" }
     ],
     jobs: [
       { icon: "trash", title: "Müllabfuhr", desc: "Sammle Müll in der ganzen Stadt ein – ein verlässlicher Einstiegsjob.", diff: 1, pay: "€ Niedrig", beginner: true },
@@ -439,7 +415,6 @@
 
   function quicklinksHTML() {
     var items = [
-      { href: "entdecken.html", icon: "pin", t: "Stadt entdecken", d: "Interaktive Karte mit allen Anlaufstellen." },
       { href: "arbeiten.html", icon: "briefcase", t: "Arbeiten", d: "Berufe mit Verdienst & Schwierigkeit." },
       { href: "nahverkehr.html", icon: "bus", t: "Nahverkehr", d: "Bus- und Straßenbahnlinien der Stadt." },
       { href: "sehenswuerdigkeiten.html", icon: "camera", t: "Sehenswürdigkeiten", d: "Die ikonischsten Orte von Los Santos." },
@@ -460,7 +435,7 @@
       '<h1 class="reveal" data-delay="1">Willkommen in <span class="grad-text">Los&nbsp;Santos</span></h1>' +
       '<p class="sub reveal" data-delay="2">Entdecke die lebendigste Stadt San Andreas. Dein Wegweiser durch Sehenswürdigkeiten, Jobs, Nahverkehr und das pulsierende Stadtleben.</p>' +
       '<div class="hero-actions reveal" data-delay="3">' +
-      '<a href="entdecken.html" class="btn btn--primary" data-testid="hero-cta-explore">' + icon("pin", 'width="18" height="18"') + ' Stadt entdecken</a>' +
+      '<a href="sehenswuerdigkeiten.html" class="btn btn--primary" data-testid="hero-cta-sights">' + icon("camera", 'width="18" height="18"') + ' Sehenswürdigkeiten</a>' +
       '<a href="events.html" class="btn btn--ghost" data-testid="hero-cta-events">Events ansehen ' + ARR + '</a></div>' +
       '<div class="hero-stats reveal" data-delay="4">' +
       '<div class="stat glass"><b>8+</b><span>Stadtbezirke</span></div>' +
@@ -482,24 +457,6 @@
       return heroHTML() +
         section(pageHead("Aktuelles", 'Was in <span class="grad-text">der Stadt</span> passiert', "Neuigkeiten, Mitteilungen des Bürgermeisters, Stadt-News, Polizeimeldungen und Event-Highlights.") + '<div class="news-grid">' + newsHTML() + '</div>') +
         section(pageHead("Entdecke mehr", 'Dein Weg durch <span class="grad-text">Los Santos</span>', "Wähle einen Bereich und tauche tiefer in die Stadt ein.") + '<div class="card-grid grid-3">' + quicklinksHTML() + '</div>', false, true);
-    },
-    entdecken: function () {
-      var sideBtns = DATA.categories.map(function (c, i) {
-        return '<button class="cat-btn' + (i === 0 ? " active" : "") + '" data-cat="' + c.id + '" data-testid="cat-' + c.id + '">' +
-          '<span class="ci">' + icon(c.icon, 'width="17" height="17"') + '</span>' + c.label + '</button>';
-      }).join("");
-      var markers = DATA.places.filter(function (p) { return p.x != null && p.y != null && p.x !== "" && p.y !== ""; }).map(function (p) {
-        return '<button class="marker" data-cat="' + p.cat + '" style="left:' + p.x + '%;top:' + p.y + '%" aria-label="' + esc(p.title) + '">' + icon(p.icon || "pin", 'width="18" height="18"') + '<span class="tip">' + esc(p.title) + '</span></button>';
-      }).join("");
-      var places = DATA.places.map(function (p) {
-        var thumbStyle = p.img ? "background:url('" + imgSrc(p.img) + "') center/cover" : "background:linear-gradient(135deg,#1a2330,#0c1017)";
-        return '<article class="place-card glass" data-cat="' + p.cat + '"><div class="pc-thumb" style="' + thumbStyle + '"><span class="ci">' + icon(p.icon, 'width="24" height="24"') + '</span></div>' +
-          '<div class="pc-body"><h4>' + p.title + '</h4><p>' + p.desc + '</p><div class="pc-meta"><span>' + icon("pin", 'width="14" height="14"') + p.loc + '</span><span>' + icon("clock", 'width="14" height="14"') + p.hours + '</span></div></div></article>';
-      }).join("");
-      return section(pageHead("Stadt entdecken", 'Die <span class="grad-text">interaktive</span> Karte', "Wähle eine Kategorie und finde die wichtigsten Anlaufstellen der Stadt – mit Beschreibung, Standort und Öffnungszeiten.") +
-        '<div class="map-wrap reveal"><div class="map-side glass" id="mapCategories"><h4>Kategorien</h4>' + sideBtns + '</div>' +
-        '<div class="map-canvas" id="mapCanvas"><img src="images/citymap.png" alt="Stilisierte Karte von Los Santos" />' + markers + '</div></div>' +
-        '<div class="places-grid" id="placesGrid">' + places + '</div>', true);
     },
     arbeiten: function () {
       return section(pageHead("Arbeiten", 'Finde deinen <span class="grad-text">Beruf</span>', "Ob als Einsteiger oder Profi – in Los Santos gibt es für jeden den passenden Job. Schwierigkeit, Verdienst und Anfänger-Empfehlung auf einen Blick.") + '<div class="card-grid grid-3">' + jobsHTML() + '</div>', true);
@@ -580,18 +537,6 @@
     });
   }
 
-  function initMap() {
-    var side = $("#mapCategories"), canvas = $("#mapCanvas"); if (!side || !canvas) return;
-    function setCat(id) {
-      side.querySelectorAll(".cat-btn").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-cat") === id); });
-      canvas.querySelectorAll(".marker").forEach(function (m) { m.classList.toggle("dim", m.getAttribute("data-cat") !== id); });
-      document.querySelectorAll("#placesGrid .place-card").forEach(function (p) { p.classList.toggle("is-hidden", p.getAttribute("data-cat") !== id); });
-    }
-    side.addEventListener("click", function (ev) { var b = ev.target.closest(".cat-btn"); if (b) setCat(b.getAttribute("data-cat")); });
-    canvas.addEventListener("click", function (ev) { var m = ev.target.closest(".marker"); if (m) setCat(m.getAttribute("data-cat")); });
-    setCat(DATA.categories[0].id);
-  }
-
   function initToTop() {
     var btn = document.createElement("button");
     btn.className = "to-top"; btn.id = "toTop"; btn.setAttribute("aria-label", "Nach oben"); btn.setAttribute("data-testid", "to-top");
@@ -605,7 +550,7 @@
      ====================================================================== */
   document.addEventListener("DOMContentLoaded", function () {
     var page = document.body.getAttribute("data-page") || "start";
-    var VAPI_PAGES = ["start", "events", "galerie", "unternehmen", "sehenswuerdigkeiten", "arbeiten", "entdecken", "freizeit"];
+    var VAPI_PAGES = ["start", "events", "galerie", "unternehmen", "sehenswuerdigkeiten", "arbeiten", "freizeit"];
 
     // Sprite + Navigation einbauen (einmalig)
     document.body.insertAdjacentHTML("afterbegin", SPRITE + buildNav(page));
@@ -617,7 +562,6 @@
       app.innerHTML = renderer();
       initFaq();
       initEvents();
-      initMap();
       if (firstRender) {
         initReveal();
         firstRender = false;

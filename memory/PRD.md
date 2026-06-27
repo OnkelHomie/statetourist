@@ -42,6 +42,17 @@ Vollständig responsive, moderne Tourismus-/Stadtführer-Webseite für den State
 - **Getestet (iteration_2):** 27/27 Backend-pytest grün; Admin 8 CMS-Tabs + Bild-Formular + Publish-Estimate; 5 Guide-Seiten rendern Seed-Inhalte; Bild-Header (Bayview/casino) erscheint. Keine Defekte.
 - **Pakete:** `statev-los-santos.zip` (Guide via statev-site) + `statev-admin.zip` (admin-site) neu gepackt; frontend/public-Kopien synchron.
 
+## „Stadt entdecken" komplett entfernt (2026-06-27)
+- Sektion „Stadt entdecken" (interaktive Karte) auf Wunsch vollständig entfernt: Navigationspunkt, Seite `entdecken.html`, GTA-Atlas-Karte (`citymap.png`), Marker-Picker und die CMS-Sektion `places`.
+- Backend: `places` aus `VALID_KINDS`, `_build_bundle`, Seed und Publish-Zählern entfernt; `content_places` geleert. Publish nun 7 Inhalts-Sektionen (events, news, gallery, sights, jobs, companies, freizeit).
+- Guide: `NAV` ohne Stadt entdecken; nav-cta → events.html; Hero-Primär-CTA → Sehenswürdigkeiten; Quicklinks bereinigt; `PAGES.entdecken`, `DATA.categories/places`, `initMap()` entfernt.
+- Admin: `places`-CMS-Tab, FIELDS, Marker-Picker (`initMapPicker`) und Preview-Mapping entfernt; Publish-Beschreibung/Zähler aktualisiert.
+- Verifiziert: Nav-Screenshot zeigt nur noch die 7 Punkte; `publish?dry=true` liefert counts ohne `places`. ZIPs neu gepackt.
+
+## Vorschau-Button + GTA-Karte + Marker (2026-06-27) — TEILWEISE rückgängig
+- (Vorher umgesetzt, dann „Stadt entdecken" entfernt) Vorschau-Button pro CMS-Sektion (iframe mit Entwurfsdaten via `GET /api/preview/bundle`) bleibt für alle verbleibenden Sektionen aktiv.
+- GTA-Karte & per-Eintrag-Marker wurden mit der „Stadt entdecken"-Entfernung wieder entfernt.
+
 ## Backlog / Next
 - P0: Discord-Credentials hinterlegen, damit der Admin-Login live funktioniert.
 - P1: Reales StateV-Verifizierungssiegel-Bild einsetzen (Platzhalter vorhanden).
